@@ -1,33 +1,65 @@
 # -----------------------------------------
 # 📦 .github/workflows/deploy.yml
-# ⚙️ Script: Despliegue automático en carpeta dinámica /var/www/<REPO>_<BRANCH> usando runner local
+# ⚙️ Script: Pipeline de despliegue de pagina web en php y composer
 # 🙍 Autor: Getsemani Ávila
 # 📅 Fecha: 2025-05-13
 # -----------------------------------------
 
-name: Despliegue local con runner
+  name: Despliegue por etapas
 
-on:
-  push:
-    branches: [ "main","dev" ]
-
-jobs:
-  deploy:
-    runs-on: self-hosted
-
-    steps:
-      - name: Checkout del repositorio
-        uses: actions/checkout@v3
-
-      - name: Obtener nombre del repo y branch
-        id: vars
-        run: |
-          echo "repo_name=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_OUTPUT
-          echo "branch_name=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
-
-      - name: Desplegar a carpeta /var/www/<repo>_<branch>
-        run: |
-          TARGET_DIR="/var/www/${{ steps.vars.outputs.repo_name }}_${{ steps.vars.outputs.branch_name }}"
-          echo "📁 Creando o usando carpeta: $TARGET_DIR"
-          mkdir -p "$TARGET_DIR"
-          rsync -av --delete ./ "$TARGET_DIR/"
+  on:
+    push:
+      branches: [ "main" ]
+  
+  jobs:
+    deploy:
+      name: 🚚 Stage 1 - Despliegue de archivos
+      runs-on: self-hosted
+      outputs:
+        repo_name: ${{ steps.vars.outputs.repo_name }}
+        branch_name: ${{ steps.vars.outputs.branch_name }}
+  
+      steps:
+        - name: 🧩 Checkout del repositorio
+          uses: actions/checkout@v3
+  
+        - name: 🛠️ Obtener nombre del repo y branch
+          id: vars
+          run: |
+            echo "repo_name=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_OUTPUT
+            echo "branch_name=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+  
+        - name: 📁 Desplegar a carpeta dinámica
+          run: |
+            TARGET_DIR="/var/www/${{ steps.vars.outputs.repo_name }}_${{ steps.vars.outputs.branch_name }}"
+            echo "Creando carpeta destino: $TARGET_DIR"
+            sudo mkdir -p "$TARGET_DIR"
+            sudo rsync -av --delete ./ "$TARGET_DIR/"
+  
+    composer:
+      name: 📦 Stage 2 - Instalar dependencias Composer
+      runs-on: self-hosted
+      needs: deploy
+      steps:
+        - name: Instalar Composer si aplica
+          run: |
+            TARGET_DIR="/var/www/${{ needs.deploy.outputs.repo_name }}_${{ needs.deploy.outputs.branch_name }}"
+            if [ -f "$TARGET_DIR/composer.json" ]; then
+              echo "📦 Ejecutando Composer en $TARGET_DIR"
+              cd "$TARGET_DIR"
+              sudo -u github-action composer install --no-interaction --prefer-dist --no-dev
+            else
+              echo "⚠️ No se encontró composer.json"
+            fi
+  
+    apache-config:
+      name: 🔧 Stage 3 - Configurar Apache VirtualHost
+      runs-on: self-hosted
+      needs: composer
+      steps:
+        - name: Ejecutar script de configuración de Apache
+          run: |
+            sudo bash /opt/scripts/configurar-apache.sh \
+              "${{ needs.deploy.outputs.repo_name }}" \
+              "${{ needs.deploy.outputs.branch_name }}"
+  
