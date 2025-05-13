@@ -33,8 +33,8 @@
           run: |
             TARGET_DIR="/var/www/${{ steps.vars.outputs.repo_name }}_${{ steps.vars.outputs.branch_name }}"
             echo "Creando carpeta destino: $TARGET_DIR"
-            sudo mkdir -p "$TARGET_DIR"
-            sudo rsync -av --delete ./ "$TARGET_DIR/"
+            mkdir -p "$TARGET_DIR"
+            rsync -av --delete ./ "$TARGET_DIR/"
   
     composer:
       name: 📦 Stage 2 - Instalar dependencias Composer
@@ -47,7 +47,7 @@
             if [ -f "$TARGET_DIR/composer.json" ]; then
               echo "📦 Ejecutando Composer en $TARGET_DIR"
               cd "$TARGET_DIR"
-              sudo -u github-action composer install --no-interaction --prefer-dist --no-dev
+              -u github-action composer install --no-interaction --prefer-dist --no-dev
             else
               echo "⚠️ No se encontró composer.json"
             fi
@@ -59,7 +59,7 @@
       steps:
         - name: Ejecutar script de configuración de Apache
           run: |
-            sudo /opt/scripts/add-apache_virtual-host.sh
+            /opt/scripts/add-apache_virtual-host.sh
               "${{ needs.deploy.outputs.repo_name }}" \
               "${{ needs.deploy.outputs.branch_name }}"
 
