@@ -1,0 +1,39 @@
+# -----------------------------------------
+# 📦 .github/workflows/composer-install.yml
+# ⚙️ Script: Despliegue automático en carpeta dinámica /var/www/<REPO>_<BRANCH> usando runner local
+# 🙍 Autor: Getsemani Ávila
+# 📅 Fecha: 2025-05-13
+# -----------------------------------------
+
+name: Instalar dependencias Composer
+
+on:
+  push:
+    paths:
+      - 'composer.json'
+      - 'composer.lock'
+
+jobs:
+  composer-install:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v3
+
+      - name: Obtener nombre del repo y branch
+        id: vars
+        run: |
+          echo "repo_name=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_OUTPUT
+          echo "branch_name=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+
+      - name: Instalar dependencias con Composer
+        run: |
+          TARGET_DIR="/var/www/${{ steps.vars.outputs.repo_name }}_${{ steps.vars.outputs.branch_name }}"
+          echo "📦 Instalando dependencias en $TARGET_DIR"
+          if [ -f "$TARGET_DIR/composer.json" ]; then
+            cd "$TARGET_DIR"
+            sudo -u github-action composer install --no-interaction --prefer-dist --no-dev
+          else
+            echo "⚠️ composer.json no encontrado, se omite instalación."
+          fi
