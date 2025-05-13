@@ -60,8 +60,8 @@
         - name: Ejecutar script de configuración de Apache
           run: |
             /opt/scripts/add-apache_virtual-host.sh
-              "${{ needs.deploy.outputs.repo_name }}" \
-              "${{ needs.deploy.outputs.branch_name }}"
+            "${{ needs.deploy.outputs.repo_name }}" \
+            "${{ needs.deploy.outputs.branch_name }}"                 
 
         
       
