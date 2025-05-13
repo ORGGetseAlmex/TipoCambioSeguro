@@ -1,0 +1,33 @@
+# -----------------------------------------
+# 📦 .github/workflows/deploy.yml
+# ⚙️ Script: Despliegue automático en carpeta dinámica /var/www/<REPO>_<BRANCH> usando runner local
+# 🙍 Autor: Getsemani Ávila
+# 📅 Fecha: 2025-05-13
+# -----------------------------------------
+
+name: Despliegue local con runner
+
+on:
+  push:
+    branches: [ "main","dev" ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v3
+
+      - name: Obtener nombre del repo y branch
+        id: vars
+        run: |
+          echo "repo_name=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_OUTPUT
+          echo "branch_name=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+
+      - name: Desplegar a carpeta /var/www/<repo>_<branch>
+        run: |
+          TARGET_DIR="/var/www/${{ steps.vars.outputs.repo_name }}_${{ steps.vars.outputs.branch_name }}"
+          echo "📁 Creando o usando carpeta: $TARGET_DIR"
+          mkdir -p "$TARGET_DIR"
+          rsync -av --delete ./ "$TARGET_DIR/"
