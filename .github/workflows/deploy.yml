@@ -18,7 +18,7 @@
       outputs:
         repo_name: ${{ steps.vars.outputs.repo_name }}
         branch_name: ${{ steps.vars.outputs.branch_name }}
-  
+
       steps:
         - name: 🧩 Checkout del repositorio
           uses: actions/checkout@v3
@@ -59,9 +59,9 @@
       steps:
         - name: Ejecutar script de configuración de Apache
           run: |
-            /opt/scripts/add-apache_virtual-host.sh
-            "${{ needs.deploy.outputs.repo_name }}" \
-            "${{ needs.deploy.outputs.branch_name }}"                 
+            sudo /opt/scripts/add-apache_virtual-host.sh \
+              "${{ needs.deploy.outputs.repo_name }}" \
+              "${{ needs.deploy.outputs.branch_name }}"                 
 
         
       
