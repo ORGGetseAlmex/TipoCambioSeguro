@@ -5,7 +5,7 @@
 # 📅 Fecha: 2025-05-13
 # -----------------------------------------
 
-name: Despliegue local con runner
+name: Despliegue de Pagina en Matriz
 
 on:
   push:
@@ -25,11 +25,20 @@ jobs:
           echo "repo_name=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_OUTPUT
           echo "branch_name=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
 
-      - name: Desplegar a carpeta /var/www/<repo>_<branch>
+      - name: Desplegar archivos
         run: |
           TARGET_DIR="/var/www/${{ steps.vars.outputs.repo_name }}_${{ steps.vars.outputs.branch_name }}"
-          echo "📁 Creando o usando carpeta: $TARGET_DIR"
-          mkdir -p "$TARGET_DIR"
-          rsync -av --delete ./ "$TARGET_DIR/"
+          echo "📁 Desplegando a $TARGET_DIR"
+          sudo mkdir -p "$TARGET_DIR"
+          sudo rsync -av --delete ./ "$TARGET_DIR/"
 
-
+      - name: Instalar dependencias con Composer
+        run: |
+          TARGET_DIR="/var/www/${{ steps.vars.outputs.repo_name }}_${{ steps.vars.outputs.branch_name }}"
+          if [ -f "$TARGET_DIR/composer.json" ]; then
+            echo "📦 Instalando Composer en $TARGET_DIR"
+            cd "$TARGET_DIR"
+            sudo -u github-action composer install --no-interaction --prefer-dist --no-dev
+          else
+            echo "⚠️ composer.json no encontrado, se omite instalación."
+          fi
