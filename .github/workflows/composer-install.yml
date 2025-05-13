@@ -1,6 +1,6 @@
 # -----------------------------------------
 # 📦 .github/workflows/composer-install.yml
-# ⚙️ Script: Despliegue automático en carpeta dinámica /var/www/<REPO>_<BRANCH> usando runner local
+# ⚙️ Script: Instalacion de dependencias de composer
 # 🙍 Autor: Getsemani Ávila
 # 📅 Fecha: 2025-05-13
 # -----------------------------------------
@@ -8,10 +8,11 @@
 name: Instalar dependencias Composer
 
 on:
-  push:
-    paths:
-      - 'composer.json'
-      - 'composer.lock'
+    push:
+      paths:
+        - 'composer.json'
+        - 'composer.lock'
+    workflow_dispatch:
 
 jobs:
   composer-install:
