@@ -15,25 +15,24 @@
     deploy:
       name: 🚚 Stage 1 - Despliegue de archivos
       runs-on: self-hosted
-  
+
       outputs:
-        repo_name: ${{ steps.vars.outputs.repo_name }}
-        branch_name: ${{ steps.vars.outputs.branch_name }}
-  
+        repo_name: ${{ steps.setvars.outputs.repo_name }}
+        branch_name: ${{ steps.setvars.outputs.branch_name }}
+
       steps:
         - name: 🧩 Checkout del repositorio
           uses: actions/checkout@v3
-  
+
         - name: 🛠️ Obtener nombre del repo y branch
-          id: vars
+          id: setvars
           run: |
-            echo "repo_name=${GITHUB_REPOSITORY##*/}" >> $GITHUB_OUTPUT
-            echo "branch_name=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+            echo "repo_name=${GITHUB_REPOSITORY##*/}" >> "$GITHUB_OUTPUT"
+            echo "branch_name=${GITHUB_REF##*/}" >> "$GITHUB_OUTPUT"
   
         - name: 📁 Desplegar a carpeta dinámica
           run: |
-            TARGET_DIR="/var/www/${{ steps.vars.outputs.repo_name }}_${{ steps.vars.outputs.branch_name }}"
-            echo "Creando carpeta destino: $TARGET_DIR"
+            TARGET_DIR="/var/www/${{ steps.setvars.outputs.repo_name }}_${{ steps.setvars.outputs.branch_name }}"
             mkdir -p "$TARGET_DIR"
             rsync -av --delete ./ "$TARGET_DIR/"
   
@@ -57,7 +56,7 @@
     apache-config:
       name: 🔧 Stage 3 - Configurar Apache VirtualHost
       runs-on: self-hosted
-      needs: composer
+      needs: deploy
   
       steps:
         - name: Ejecutar script de configuración de Apache
@@ -66,4 +65,3 @@
             sudo /opt/scripts/add-apache_virtual-host.sh \
               "${{ needs.deploy.outputs.repo_name }}" \
               "${{ needs.deploy.outputs.branch_name }}"
-  
