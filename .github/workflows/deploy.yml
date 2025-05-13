@@ -47,7 +47,7 @@
             if [ -f "$TARGET_DIR/composer.json" ]; then
               echo "📦 Ejecutando Composer en $TARGET_DIR"
               cd "$TARGET_DIR"
-              -u github-action composer install --no-interaction --prefer-dist --no-dev
+              sudo -u github-action composer install --no-interaction --prefer-dist --no-dev
             else
               echo "⚠️ No se encontró composer.json"
             fi
