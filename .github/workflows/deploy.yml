@@ -59,7 +59,7 @@
       steps:
         - name: Ejecutar script de configuración de Apache
           run: |
-            sudo bash /opt/scripts/configurar-apache.sh \
+            sudo bash /opt/scripts/add-apache_virtual-host.sh \
               "${{ needs.deploy.outputs.repo_name }}" \
               "${{ needs.deploy.outputs.branch_name }}"
   
