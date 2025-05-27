@@ -33,9 +33,9 @@ jobs:
         run: |
           TARGET_DIR="/var/www/${{ steps.setvars.outputs.repo_name }}_${{ steps.setvars.outputs.branch_name }}"
           echo "Preparando permisos para $TARGET_DIR"
-          sudo mkdir -p "$TARGET_DIR"
-          sudo chown -R github-action:github-action "$TARGET_DIR"
-          sudo chmod -R 755 "$TARGET_DIR"    
+          echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S mkdir -p "$TARGET_DIR"
+          echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S chown -R github-action:github-action "$TARGET_DIR"
+          echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S chmod -R 755 "$TARGET_DIR" 
 
       - name: 📁 Desplegar a carpeta dinámica
         run: |
