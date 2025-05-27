@@ -51,16 +51,3 @@ jobs:
           else
             echo "⚠️ No se encontró composer.json"
           fi
-
-  apache-config:
-    name: 🔧 Stage 3 - Configurar Apache VirtualHost
-    runs-on: self-hosted
-    needs: deploy
-
-    steps:
-      - name: Ejecutar script de configuración de Apache
-        run: |
-          echo "Pasando valores: REPO=${{ needs.deploy.outputs.repo_name }}, BRANCH=${{ needs.deploy.outputs.branch_name }}"
-          sudo /opt/scripts/add-apache_virtual-host.sh \
-            "${{ needs.deploy.outputs.repo_name }}" \
-            "${{ needs.deploy.outputs.branch_name }}"
