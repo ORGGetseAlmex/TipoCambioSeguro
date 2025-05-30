@@ -8,21 +8,6 @@ $fechaFin = date("Y-m-d");
 $hoy = date("Y-m-d");
 
 
-$conn->query("CREATE TABLE IF NOT EXISTS tblTipoCambio (
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    Valor DECIMAL(10,4) NOT NULL,
-    FechaValor DATE NOT NULL,
-    FechaEmision DATE NOT NULL,
-    FechaLiquidacion DATE NOT NULL,
-    Moneda VARCHAR(3) NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-)");
-
-$conn->query("CREATE TABLE IF NOT EXISTS tblTipoCambioStatus (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    ultima_actualizacion DATE
-)");
 
 // Verifica si ya se actualizó hoy
 $estado = $conn->query("SELECT ultima_actualizacion FROM tblTipoCambioStatus ORDER BY id DESC LIMIT 1");
@@ -30,12 +15,6 @@ $yaActualizadoHoy = false;
 
 if ($estado && $row = $estado->fetch_assoc()) {
     $yaActualizadoHoy = $row['ultima_actualizacion'] === $hoy;
-}
-
-
-$checkIndex = $conn->query("SHOW INDEX FROM tblTipoCambio WHERE Key_name = 'uniq_fecha_moneda'");
-if ($checkIndex->num_rows === 0) {
-    $conn->query("ALTER TABLE tblTipoCambio ADD UNIQUE KEY uniq_fecha_moneda (FechaValor, Moneda)");
 }
 
 
