@@ -7,6 +7,7 @@ $token = $_ENV['BANXICO_TOKEN'];
 $fechaFin = date("Y-m-d");
 $hoy = date("Y-m-d");
 
+
 $conn->query("CREATE TABLE IF NOT EXISTS tblTipoCambio (
     Id INT AUTO_INCREMENT PRIMARY KEY,
     Valor DECIMAL(10,4) NOT NULL,
@@ -23,7 +24,7 @@ $conn->query("CREATE TABLE IF NOT EXISTS tblTipoCambioStatus (
     ultima_actualizacion DATE
 )");
 
-//validar si se actualizo el dia de hoy
+// Verifica si ya se actualizó hoy
 $estado = $conn->query("SELECT ultima_actualizacion FROM tblTipoCambioStatus ORDER BY id DESC LIMIT 1");
 $yaActualizadoHoy = false;
 
@@ -31,13 +32,15 @@ if ($estado && $row = $estado->fetch_assoc()) {
     $yaActualizadoHoy = $row['ultima_actualizacion'] === $hoy;
 }
 
-$conn->query("DELETE t1 FROM tblTipoCambio t1 JOIN tblTipoCambio t2 
-    ON t1.FechaValor = t2.FechaValor AND t1.Moneda = t2.Moneda AND t1.Id > t2.Id");
 
 $checkIndex = $conn->query("SHOW INDEX FROM tblTipoCambio WHERE Key_name = 'uniq_fecha_moneda'");
 if ($checkIndex->num_rows === 0) {
     $conn->query("ALTER TABLE tblTipoCambio ADD UNIQUE KEY uniq_fecha_moneda (FechaValor, Moneda)");
 }
+
+
+$conn->query("DELETE t1 FROM tblTipoCambio t1 JOIN tblTipoCambio t2 
+    ON t1.FechaValor = t2.FechaValor AND t1.Moneda = t2.Moneda AND t1.Id > t2.Id");
 
 if (!$yaActualizadoHoy) {
     $result = $conn->query("SELECT MAX(FechaValor) AS ultimaFecha FROM tblTipoCambio WHERE Moneda = '02'");
@@ -66,6 +69,4 @@ if (!$yaActualizadoHoy) {
 }
 
 $conn->close();
-
-
 ?>
