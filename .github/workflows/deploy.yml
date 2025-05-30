@@ -8,7 +8,7 @@ name: Despliegue por etapas
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main","dev" ]
 
 jobs:
   deploy:
