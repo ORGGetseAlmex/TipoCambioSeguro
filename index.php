@@ -4,7 +4,7 @@ require 'db.php';
 require 'helpers.php';
 
 $cache_file = __DIR__ . '/tipo_cambio_cache.html';
-$cache_lifetime = 60; 
+$cache_lifetime = 60;
 
 
 if (isset($_GET['nocache']) && $_GET['nocache'] === '1') {
@@ -20,77 +20,9 @@ if (file_exists($cache_file) && (time() - filemtime($cache_file)) < $cache_lifet
 
 ob_start();
 
-$token = $_ENV['BANXICO_TOKEN'];
 $fechaFin = date("Y-m-d");
-
-
-$conn->query("CREATE TABLE IF NOT EXISTS tblTipoCambio (
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    Valor DECIMAL(10,4) NOT NULL,
-    FechaValor DATE NOT NULL,
-    FechaEmision DATE NOT NULL,
-    FechaLiquidacion DATE NOT NULL,
-    Moneda VARCHAR(3) NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-)");
-
-
-$conn->query("CREATE TABLE IF NOT EXISTS tblTipoCambioStatus (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    ultima_actualizacion DATE
-)");
-
-
-$estado = $conn->query("SELECT ultima_actualizacion FROM tblTipoCambioStatus ORDER BY id DESC LIMIT 1");
-$hoy = date("Y-m-d");
-$yaActualizadoHoy = false;
-
-if ($estado && $row = $estado->fetch_assoc()) {
-    $yaActualizadoHoy = $row['ultima_actualizacion'] === $hoy;
-}
-
-
-$checkIndex = $conn->query("SHOW INDEX FROM tblTipoCambio WHERE Key_name = 'uniq_fecha_moneda'");
-if ($checkIndex->num_rows === 0) {
-    $conn->query("ALTER TABLE tblTipoCambio ADD UNIQUE KEY uniq_fecha_moneda (FechaValor, Moneda)");
-}
-
-
-$conn->query("DELETE t1 FROM tblTipoCambio t1 JOIN tblTipoCambio t2 
-    ON t1.FechaValor = t2.FechaValor AND t1.Moneda = t2.Moneda AND t1.Id > t2.Id");
-
-
-if (!$yaActualizadoHoy) {
-    $result = $conn->query("SELECT MAX(FechaValor) AS ultimaFecha FROM tblTipoCambio WHERE Moneda = '02'");
-    $row = $result->fetch_assoc();
-    $fechaInicio = $row['ultimaFecha'] ?? "1991-11-21";
-    $fechaInicio = date("Y-m-d", strtotime($fechaInicio . " +1 day"));
-
-    if ($fechaInicio <= $fechaFin) {
-        $url = "https://www.banxico.org.mx/SieAPIRest/service/v1/series/SF60653/datos/$fechaInicio/$fechaFin?token=$token";
-        $response = file_get_contents($url);
-        $data = json_decode($response, true);
-
-        if ($data && isset($data['bmx']['series'][0]['datos'])) {
-            $registros = $data['bmx']['series'][0]['datos'];
-            $stmt = $conn->prepare("INSERT IGNORE INTO tblTipoCambio (Valor, FechaValor, FechaEmision, FechaLiquidacion, Moneda) VALUES (?, ?, ?, ?, '02')");
-            foreach ($registros as $item) {
-                $fecha = DateTime::createFromFormat('d/m/Y', $item['fecha'])->format('Y-m-d');
-                $valor = floatval($item['dato']);
-                $stmt->bind_param("dsss", $valor, $fecha, $fecha, $fecha);
-                $stmt->execute();
-            }
-            $stmt->close();
-            $conn->query("INSERT INTO tblTipoCambioStatus (ultima_actualizacion) VALUES ('$hoy')");
-        }
-    }
-}
-
-
 $desde = $_GET['desde'] ?? "1991-11-21";
 $hasta = $_GET['hasta'] ?? $fechaFin;
-
 
 $query = $conn->prepare("SELECT Valor, FechaValor FROM tblTipoCambio WHERE Moneda = '02' AND FechaValor BETWEEN ? AND ? ORDER BY FechaValor DESC");
 $query->bind_param("ss", $desde, $hasta);
@@ -114,8 +46,8 @@ while ($row = $result->fetch_assoc()) {
 }
 reset($meses);
 $ultimoMes = current($meses);
-$valorHoy = $ultimoMes['registros'][0]['valor'];
-$fechaHoy = $ultimoMes['registros'][0]['fecha'];
+$valorHoy = $ultimoMes['registros'][0]['valor'] ?? 'N/A';
+$fechaHoy = $ultimoMes['registros'][0]['fecha'] ?? 'N/A';
 
 $conn->close();
 ?>
@@ -166,38 +98,6 @@ $conn->close();
         font-size: 2rem;
         color: #00e5ff;
         font-weight: 700;
-    }
-
-    form {
-        margin: 2rem 0;
-    }
-
-    input[type="date"], button {
-        padding: 0.8rem 1rem;
-        border: none;
-        border-radius: 10px;
-        margin: 0.5rem;
-        font-size: 1rem;
-        font-family: 'Inter', sans-serif;
-    }
-
-    input[type="date"] {
-        background-color: #ffffff;
-        color: #263238;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-
-    button {
-        background-color: #00bcd4;
-        color: white;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0, 188, 212, 0.3);
-    }
-
-    button:hover {
-        background-color: #008ba3;
     }
 
     table {
@@ -257,8 +157,7 @@ $conn->close();
             font-size: 1.5rem;
         }
     }
-</style>
-
+    </style>
 </head>
 <body>
 <div class="container">
@@ -280,7 +179,7 @@ $conn->close();
 </html>
 
 <?php
-
+// Guardar caché generado
 $contenido = ob_get_contents();
 ob_end_clean();
 file_put_contents($cache_file, $contenido);
