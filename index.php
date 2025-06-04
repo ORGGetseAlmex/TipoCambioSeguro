@@ -122,7 +122,7 @@ $conn->close();
             <?php foreach ($info['registros'] as $r): ?>
                 <tr><td><?= $r['fecha'] ?></td><td>$<?= $r['valor'] ?></td></tr>
             <?php endforeach; ?>
-            <tr><th>Promedio</th><th>$<?= number_format($info['suma'] / $info['n'], 4) ?></th></tr>
+            <tr><th>Promedio:</th><th>$<?= number_format($info['suma'] / $info['n'], 4) ?></th></tr>
         </table>
     <?php endforeach; ?>
 </div>
