@@ -3,7 +3,7 @@ define('APP_RUNNING', true);
 require 'db.php';
 require 'helpers.php';
 
-date_default_timezone_set('America/Mexico_City'); // Ajusta según zona
+date_default_timezone_set('America/Mexico_City');
 
 $token = $_ENV['BANXICO_TOKEN'] ?? null;
 if (!$token) {
@@ -12,10 +12,9 @@ if (!$token) {
 }
 
 $fechaFin = date("Y-m-d");
-$hoy = $fechaFin;
 
 try {
-    // Crear tablas si no existen
+    // Crear tabla si no existe
     $conn->query("CREATE TABLE IF NOT EXISTS tblTipoCambio (
         Id INT AUTO_INCREMENT PRIMARY KEY,
         Valor DECIMAL(10,4) NOT NULL,
@@ -32,36 +31,34 @@ try {
         ultima_actualizacion DATE
     )");
 
-    // Verifica si ya se actualizó hoy
-    $estado = $conn->query("SELECT ultima_actualizacion FROM tblTipoCambioStatus ORDER BY id DESC LIMIT 1");
-    $yaActualizadoHoy = false;
-    if ($estado && $row = $estado->fetch_assoc()) {
-        $yaActualizadoHoy = $row['ultima_actualizacion'] === $hoy;
-    }
-
-    if ($yaActualizadoHoy) {
-        echo "Ya se actualizó el tipo de cambio hoy ($hoy), no se realiza ninguna acción.\n";
-        exit(0);
-    }
-
-    // Crear índice si no existe
+    // Asegurar índice único por fecha y moneda
     $checkIndex = $conn->query("SHOW INDEX FROM tblTipoCambio WHERE Key_name = 'uniq_fecha_moneda'");
     if ($checkIndex->num_rows === 0) {
         $conn->query("ALTER TABLE tblTipoCambio ADD UNIQUE KEY uniq_fecha_moneda (FechaValor, Moneda)");
     }
 
-    // Eliminar duplicados
+    // Eliminar duplicados si los hubiera
     $conn->query("DELETE t1 FROM tblTipoCambio t1 JOIN tblTipoCambio t2
         ON t1.FechaValor = t2.FechaValor AND t1.Moneda = t2.Moneda AND t1.Id > t2.Id");
 
-    // Obtener la última fecha
+    // Buscar última fecha real en base de datos
     $result = $conn->query("SELECT MAX(FechaValor) AS ultimaFecha FROM tblTipoCambio WHERE Moneda = '02'");
     $row = $result->fetch_assoc();
-    $fechaInicio = $row['ultimaFecha'] ?? "1991-11-21";
-    $fechaInicio = date("Y-m-d", strtotime($fechaInicio . " +1 day"));
+
+    $fechaInicio = $row['ultimaFecha'] ?? null;
+
+    if (!$fechaInicio) {
+        // No hay datos: traer todo desde el inicio de los tiempos
+        $fechaInicio = "1991-11-21";
+        echo "No se encontraron datos anteriores. Descargando todo desde 1991...\n";
+    } else {
+        // Sumar un día a la última fecha
+        $fechaInicio = date("Y-m-d", strtotime($fechaInicio . " +1 day"));
+        echo "Última fecha encontrada: {$row['ultimaFecha']}. Iniciando desde $fechaInicio hasta $fechaFin...\n";
+    }
 
     if ($fechaInicio > $fechaFin) {
-        echo "No hay fechas nuevas para actualizar. Última: $fechaInicio, Hoy: $fechaFin\n";
+        echo "No hay fechas nuevas para actualizar. Última fecha registrada es mayor o igual al día de hoy.\n";
         exit(0);
     }
 
@@ -81,6 +78,12 @@ try {
     }
 
     $registros = $data['bmx']['series'][0]['datos'];
+    if (count($registros) === 0) {
+        echo "No se encontraron nuevos registros para actualizar.\n";
+        exit(0);
+    }
+
+    // Insertar datos
     $stmt = $conn->prepare("INSERT IGNORE INTO tblTipoCambio (Valor, FechaValor, FechaEmision, FechaLiquidacion, Moneda) VALUES (?, ?, ?, ?, '02')");
 
     foreach ($registros as $item) {
@@ -91,11 +94,15 @@ try {
     }
 
     $stmt->close();
+
+    // Insertar en status para histórico (opcional)
+    $hoy = date("Y-m-d");
     $conn->query("INSERT INTO tblTipoCambioStatus (ultima_actualizacion) VALUES ('$hoy')");
 
-    echo "Actualización completada con éxito el $hoy. Registros nuevos: " . count($registros) . "\n";
+    echo "✅ Actualización completada con éxito el $hoy. Registros nuevos insertados: " . count($registros) . "\n";
+
 } catch (Exception $e) {
-    echo "Error durante la actualización: " . $e->getMessage() . "\n";
+    echo "❌ Error durante la actualización: " . $e->getMessage() . "\n";
     exit(1);
 }
 
