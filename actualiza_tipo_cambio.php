@@ -14,7 +14,7 @@ if (!$token) {
 $fechaFin = date("Y-m-d");
 
 try {
-    // Crear tabla si no existe
+    
     $conn->query("CREATE TABLE IF NOT EXISTS tblTipoCambio (
         Id INT AUTO_INCREMENT PRIMARY KEY,
         Valor DECIMAL(10,4) NOT NULL,
@@ -31,28 +31,28 @@ try {
         ultima_actualizacion DATE
     )");
 
-    // Asegurar índice único por fecha y moneda
+   
     $checkIndex = $conn->query("SHOW INDEX FROM tblTipoCambio WHERE Key_name = 'uniq_fecha_moneda'");
     if ($checkIndex->num_rows === 0) {
         $conn->query("ALTER TABLE tblTipoCambio ADD UNIQUE KEY uniq_fecha_moneda (FechaValor, Moneda)");
     }
 
-    // Eliminar duplicados si los hubiera
+    
     $conn->query("DELETE t1 FROM tblTipoCambio t1 JOIN tblTipoCambio t2
         ON t1.FechaValor = t2.FechaValor AND t1.Moneda = t2.Moneda AND t1.Id > t2.Id");
 
-    // Buscar última fecha real en base de datos
+    
     $result = $conn->query("SELECT MAX(FechaValor) AS ultimaFecha FROM tblTipoCambio WHERE Moneda = '02'");
     $row = $result->fetch_assoc();
 
     $fechaInicio = $row['ultimaFecha'] ?? null;
 
     if (!$fechaInicio) {
-        // No hay datos: traer todo desde el inicio de los tiempos
+        
         $fechaInicio = "1991-11-21";
         echo "No se encontraron datos anteriores. Descargando todo desde 1991...\n";
     } else {
-        // Sumar un día a la última fecha
+        
         $fechaInicio = date("Y-m-d", strtotime($fechaInicio . " +1 day"));
         echo "Última fecha encontrada: {$row['ultimaFecha']}. Iniciando desde $fechaInicio hasta $fechaFin...\n";
     }
@@ -62,7 +62,7 @@ try {
         exit(0);
     }
 
-    // Llamada a Banxico
+    
     $url = "https://www.banxico.org.mx/SieAPIRest/service/v1/series/SF60653/datos/$fechaInicio/$fechaFin?token=$token";
     $response = @file_get_contents($url);
 
@@ -83,7 +83,7 @@ try {
         exit(0);
     }
 
-    // Insertar datos
+    
     $stmt = $conn->prepare("INSERT IGNORE INTO tblTipoCambio (Valor, FechaValor, FechaEmision, FechaLiquidacion, Moneda) VALUES (?, ?, ?, ?, '02')");
 
     foreach ($registros as $item) {
@@ -95,14 +95,14 @@ try {
 
     $stmt->close();
 
-    // Insertar en status para histórico (opcional)
+   
     $hoy = date("Y-m-d");
     $conn->query("INSERT INTO tblTipoCambioStatus (ultima_actualizacion) VALUES ('$hoy')");
 
-    echo "✅ Actualización completada con éxito el $hoy. Registros nuevos insertados: " . count($registros) . "\n";
+    echo "Actualización completada con éxito el $hoy. Registros nuevos insertados: " . count($registros) . "\n";
 
 } catch (Exception $e) {
-    echo "❌ Error durante la actualización: " . $e->getMessage() . "\n";
+    echo "Error durante la actualización: " . $e->getMessage() . "\n";
     exit(1);
 }
 
