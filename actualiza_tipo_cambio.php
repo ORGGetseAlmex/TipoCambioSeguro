@@ -14,22 +14,9 @@ if (!$token) {
 $fechaFin = date("Y-m-d");
 
 try {
+   
     
-    $conn->query("CREATE TABLE IF NOT EXISTS tblTipoCambio (
-        Id INT AUTO_INCREMENT PRIMARY KEY,
-        Valor DECIMAL(10,4) NOT NULL,
-        FechaValor DATE NOT NULL,
-        FechaEmision DATE NOT NULL,
-        FechaLiquidacion DATE NOT NULL,
-        Moneda VARCHAR(3) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )");
 
-    $conn->query("CREATE TABLE IF NOT EXISTS tblTipoCambioStatus (
-        id INT PRIMARY KEY AUTO_INCREMENT,
-        ultima_actualizacion DATE
-    )");
 
    
     $checkIndex = $conn->query("SHOW INDEX FROM tblTipoCambio WHERE Key_name = 'uniq_fecha_moneda'");
@@ -84,25 +71,60 @@ try {
     }
 
     
-    $stmt = $conn->prepare("INSERT IGNORE INTO tblTipoCambio (Valor, FechaValor, FechaEmision, FechaLiquidacion, Moneda) VALUES (?, ?, ?, ?, '02')");
+  //*********************
+  // Inicia la transacción para eficiencia y atomicidad
+$conn->begin_transaction();
 
-    foreach ($registros as $item) {
-        $fecha = DateTime::createFromFormat('d/m/Y', $item['fecha'])->format('Y-m-d');
-        $valor = floatval($item['dato']);
-        $stmt->bind_param("dsss", $valor, $fecha, $fecha, $fecha);
-        $stmt->execute();
-    }
+$insertSQL = "INSERT IGNORE INTO tblTipoCambio (Valor, FechaValor, FechaEmision, FechaLiquidacion, Moneda) VALUES ";
+$placeholders = [];
+$params = [];
+$types = "";
 
-    $stmt->close();
+// Recolecta valores y placeholders
+foreach ($registros as $item) {
+    $fecha = DateTime::createFromFormat('d/m/Y', $item['fecha'])->format('Y-m-d');
+    $valor = floatval($item['dato']);
+
+    $placeholders[] = "(?, ?, ?, ?, '02')";
+    $params[] = $valor;
+    $params[] = $fecha;
+    $params[] = $fecha;
+    $params[] = $fecha;
+    $types .= "dsss";
+}
+
+// Construye la sentencia final
+$insertSQL .= implode(", ", $placeholders);
+
+// Prepara e inserta
+$stmt = $conn->prepare($insertSQL);
+
+if ($stmt === false) {
+    die("Error en prepare: " . $conn->error);
+}
+
+// Vincula los parámetros dinámicamente
+$tmp = [];
+$tmp[] = &$types;
+foreach ($params as $key => $value) {
+    $tmp[] = &$params[$key];
+}
+call_user_func_array([$stmt, 'bind_param'], $tmp);
+
+// Ejecuta y termina
+$stmt->execute();
+$conn->commit();
+$stmt->close();
+
 
    
     $hoy = date("Y-m-d");
     $conn->query("INSERT INTO tblTipoCambioStatus (ultima_actualizacion) VALUES ('$hoy')");
 
-    echo "Actualización completada con éxito el $hoy. Registros nuevos insertados: " . count($registros) . "\n";
+    echo "✅ Actualización completada con éxito el $hoy. Registros nuevos insertados: " . count($registros) . "\n";
 
 } catch (Exception $e) {
-    echo "Error durante la actualización: " . $e->getMessage() . "\n";
+    echo "❌ Error durante la actualización: " . $e->getMessage() . "\n";
     exit(1);
 }
 
