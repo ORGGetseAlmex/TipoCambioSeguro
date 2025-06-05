@@ -10,14 +10,9 @@ if (!$token) {
     echo "Error: BANXICO_TOKEN no está definido en variables de entorno.\n";
     exit(1);
 }
-
 $fechaFin = date("Y-m-d");
 
 try {
-   
-    
-
-
    
     $checkIndex = $conn->query("SHOW INDEX FROM tblTipoCambio WHERE Key_name = 'uniq_fecha_moneda'");
     if ($checkIndex->num_rows === 0) {
@@ -49,7 +44,6 @@ try {
         exit(0);
     }
 
-    
     $url = "https://www.banxico.org.mx/SieAPIRest/service/v1/series/SF60653/datos/$fechaInicio/$fechaFin?token=$token";
     $response = @file_get_contents($url);
 
@@ -70,9 +64,6 @@ try {
         exit(0);
     }
 
-    
-  //*********************
-  // Inicia la transacción para eficiencia y atomicidad
 $conn->begin_transaction();
 
 $insertSQL = "INSERT IGNORE INTO tblTipoCambio (Valor, FechaValor, FechaEmision, FechaLiquidacion, Moneda) VALUES ";
@@ -80,7 +71,6 @@ $placeholders = [];
 $params = [];
 $types = "";
 
-// Recolecta valores y placeholders
 foreach ($registros as $item) {
     $fecha = DateTime::createFromFormat('d/m/Y', $item['fecha'])->format('Y-m-d');
     $valor = floatval($item['dato']);
@@ -93,38 +83,31 @@ foreach ($registros as $item) {
     $types .= "dsss";
 }
 
-// Construye la sentencia final
 $insertSQL .= implode(", ", $placeholders);
 
-// Prepara e inserta
 $stmt = $conn->prepare($insertSQL);
 
 if ($stmt === false) {
     die("Error en prepare: " . $conn->error);
 }
 
-// Vincula los parámetros dinámicamente
 $tmp = [];
 $tmp[] = &$types;
 foreach ($params as $key => $value) {
     $tmp[] = &$params[$key];
 }
 call_user_func_array([$stmt, 'bind_param'], $tmp);
-
-// Ejecuta y termina
 $stmt->execute();
 $conn->commit();
 $stmt->close();
 
-
-   
     $hoy = date("Y-m-d");
     $conn->query("INSERT INTO tblTipoCambioStatus (ultima_actualizacion) VALUES ('$hoy')");
 
-    echo "✅ Actualización completada con éxito el $hoy. Registros nuevos insertados: " . count($registros) . "\n";
+    echo "Actualización completada con éxito el $hoy. Registros nuevos insertados: " . count($registros) . "\n";
 
 } catch (Exception $e) {
-    echo "❌ Error durante la actualización: " . $e->getMessage() . "\n";
+    echo "Error durante la actualización: " . $e->getMessage() . "\n";
     exit(1);
 }
 
