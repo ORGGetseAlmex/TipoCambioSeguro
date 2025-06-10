@@ -104,28 +104,32 @@ $conn->close();
             width: 220px;
             height: 100vh;
             position: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
         }
         .sidebar h3 {
             color: #ffee58;
             margin-bottom: 1rem;
             text-align: center;
+            font-size: 1.4rem;
         }
         .sidebar form {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            align-items: center;
+            width: 100%;
         }
         .sidebar button {
             width: 100%;
-            padding: 0.6rem 1rem;
+            padding: 0.8rem;
             background-color: #37474f;
             color: #fff176;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: bold;
             transition: background-color 0.2s;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
         }
         .sidebar button:hover {
             background-color: #455a64;
@@ -185,8 +189,8 @@ $conn->close();
 <div class="sidebar">
     <h3>Rango</h3>
     <form method="get">
-    <input type="hidden" name="rango" value="semana">
-    <button type="submit">Semana</button>
+        <input type="hidden" name="rango" value="semana">
+        <button type="submit">Semana</button>
     </form>
     <form method="get">
         <input type="hidden" name="rango" value="mes">
