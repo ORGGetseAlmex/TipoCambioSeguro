@@ -92,16 +92,22 @@ $conn->close();
             padding: 0;
         }
 
-        .logo-container {
-            position: absolute;
-            top: 20px;
-            right: 30px;
+            .logo-container {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        z-index: 10;
         }
 
         .logo-container img {
-            height: 70px;
+            height: 120px;
             width: auto;
-            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.6));
+            filter: drop-shadow(2px 2px 6px rgba(0,0,0,0.7));
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .logo-container img:hover {
+            transform: scale(1.05);
         }
 
         .container {
@@ -160,7 +166,7 @@ $conn->close();
 </head>
 <body>
     <div class="logo-container">
-        <img src="logo-almex.png" alt="Logo ALMEX" width="400" height="500">
+        <img src="logo-almex.png" alt="Logo ALMEX" >
     </div>
 
     <div class="container">
