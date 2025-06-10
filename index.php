@@ -86,9 +86,7 @@ $conn->close();
     <meta charset="UTF-8">
     <title>Tipo de Cambio Dólar</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
         body {
             font-family: "Segoe UI", Tahoma, sans-serif;
             background: url('https://img.freepik.com/fotos-premium/mazorcas-maiz-mesa-madera-telon-fondo-campo-maiz-al-atardecer_159938-2894.jpg') no-repeat center center fixed;
@@ -105,7 +103,6 @@ $conn->close();
             right: 20px;
             z-index: 1000;
         }
-
         .logo-fijo img {
             height: 240px;
             width: auto;
@@ -123,18 +120,15 @@ $conn->close();
             align-items: center;
             gap: 1rem;
         }
-
         .sidebar h3 {
             color: #ffee58;
             margin-bottom: 1rem;
             text-align: center;
             font-size: 1.4rem;
         }
-
         .sidebar form {
             width: 100%;
         }
-
         .sidebar button {
             width: 100%;
             padding: 0.8rem;
@@ -148,7 +142,6 @@ $conn->close();
             margin-bottom: 0.5rem;
             font-size: 1rem;
         }
-
         .sidebar button:hover {
             background-color: #455a64;
         }
@@ -174,12 +167,10 @@ $conn->close();
             font-size: 2.5rem;
             margin-bottom: 10px;
         }
-
         h2 {
             font-weight: 400;
             margin: 1rem 0;
         }
-
         .highlight {
             font-weight: bold;
             font-size: 1.8rem;
@@ -195,12 +186,10 @@ $conn->close();
             border-radius: 10px;
             overflow: hidden;
         }
-
         th, td {
             padding: 14px;
             border-bottom: 1px solid #424242;
         }
-
         th {
             background-color: #37474f;
             color: #fff176;
@@ -209,6 +198,40 @@ $conn->close();
         h3 {
             color: #ffee58;
             margin-top: 2rem;
+        }
+
+        .busqueda-box {
+            margin-top: 2rem;
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: left;
+            color: #fff;
+        }
+        .busqueda-box label {
+            display: inline-block;
+            margin: 0.5rem 0;
+        }
+        .busqueda-box input,
+        .busqueda-box select,
+        .busqueda-box button {
+            margin: 0.3rem 0;
+            padding: 0.4rem;
+            border-radius: 5px;
+            border: none;
+            font-size: 1rem;
+        }
+        .busqueda-box button {
+            background-color: #00bfa5;
+            color: #fff;
+            cursor: pointer;
+        }
+        .busqueda-box button:hover {
+            background-color: #008e76;
+        }
+        .highlighted {
+            background-color: #4caf50 !important;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -219,32 +242,42 @@ $conn->close();
 
 <div class="sidebar">
     <h3>Rango</h3>
-    <form method="get">
-        <input type="hidden" name="rango" value="semana">
-        <button type="submit">Semana</button>
-    </form>
-    <form method="get">
-        <input type="hidden" name="rango" value="mes">
-        <button type="submit">Mes</button>
-    </form>
-    <form method="get">
-        <input type="hidden" name="rango" value="3meses">
-        <button type="submit">3 Meses</button>
-    </form>
-    <form method="get">
-        <input type="hidden" name="rango" value="anio">
-        <button type="submit">Año</button>
-    </form>
-    <form method="get">
-        <input type="hidden" name="rango" value="todo">
-        <button type="submit">Todo</button>
-    </form>
+    <form method="get"><input type="hidden" name="rango" value="semana"><button type="submit">Semana</button></form>
+    <form method="get"><input type="hidden" name="rango" value="mes"><button type="submit">Mes</button></form>
+    <form method="get"><input type="hidden" name="rango" value="3meses"><button type="submit">3 Meses</button></form>
+    <form method="get"><input type="hidden" name="rango" value="anio"><button type="submit">Año</button></form>
+    <form method="get"><input type="hidden" name="rango" value="todo"><button type="submit">Todo</button></form>
 </div>
 
 <div class="main">
     <div class="container">
         <h1>Tipo de Cambio del Dólar</h1>
         <h2>Fecha: <?= $fechaHoy ?> | Valor Actual: <span class="highlight">$<?= $valorHoy ?></span></h2>
+
+        <div class="busqueda-box">
+            <h3>Búsqueda por rango</h3>
+            <label>Mes inicio:
+                <select id="mesInicio">
+                    <?php for($i=1;$i<=12;$i++): ?>
+                        <option value="<?= $i ?>"><?= DateTime::createFromFormat('!m', $i)->format('F') ?></option>
+                    <?php endfor; ?>
+                </select>
+            </label>
+            <label>Año inicio:
+                <input type="number" id="anioInicio" value="<?= date('Y') ?>">
+            </label><br>
+            <label>Mes fin:
+                <select id="mesFin">
+                    <?php for($i=1;$i<=12;$i++): ?>
+                        <option value="<?= $i ?>"><?= DateTime::createFromFormat('!m', $i)->format('F') ?></option>
+                    <?php endfor; ?>
+                </select>
+            </label>
+            <label>Año fin:
+                <input type="number" id="anioFin" value="<?= date('Y') ?>">
+            </label>
+            <button onclick="buscarPorRango()">Buscar</button>
+        </div>
 
         <?php foreach ($meses as $mes => $info): ?>
             <h3><?= $mes ?></h3>
@@ -261,5 +294,41 @@ $conn->close();
         <?php endforeach; ?>
     </div>
 </div>
+
+<script>
+function buscarPorRango() {
+    const mesInicio = parseInt(document.getElementById('mesInicio').value);
+    const anioInicio = parseInt(document.getElementById('anioInicio').value);
+    const mesFin = parseInt(document.getElementById('mesFin').value);
+    const anioFin = parseInt(document.getElementById('anioFin').value);
+
+    const filas = document.querySelectorAll("table tr");
+    filas.forEach(fila => fila.classList.remove("highlighted"));
+
+    filas.forEach(fila => {
+        const celdaFecha = fila.querySelector("td");
+        if (!celdaFecha) return;
+
+        const texto = celdaFecha.textContent.trim();
+        const partes = texto.split(" ");
+        if (partes.length < 5) return;
+
+        const dia = parseInt(partes[1]);
+        const mesTexto = partes[3];
+        const anio = parseInt(partes[5]);
+
+        const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+        const mesNum = meses.indexOf(mesTexto.toLowerCase()) + 1;
+
+        const fechaActual = new Date(anio, mesNum - 1, dia);
+        const desde = new Date(anioInicio, mesInicio - 1, 1);
+        const hasta = new Date(anioFin, mesFin, 0);
+
+        if (fechaActual >= desde && fechaActual <= hasta) {
+            fila.classList.add("highlighted");
+        }
+    });
+}
+</script>
 </body>
 </html>
