@@ -194,7 +194,7 @@ $conn->close();
     <form method="get"><input type="hidden" name="rango" value="anio"><button type="submit">Año</button></form>
     <form method="get"><input type="hidden" name="rango" value="todo"><button type="submit">Todo</button></form>
 
-    <br><br><br><br><br><br><br><br><br><br>
+    <br>
 
     <h4>Buscar por Rango</h4>
     <form method="get">
