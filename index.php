@@ -160,7 +160,7 @@ $conn->close();
 </head>
 <body>
     <div class="logo-container">
-        <img src="logo-almex.png" alt="Logo ALMEX">
+        <img src="logo-almex.png" alt="Logo ALMEX" width="400" height="500">
     </div>
 
     <div class="container">
