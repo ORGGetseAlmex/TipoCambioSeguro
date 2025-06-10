@@ -3,7 +3,7 @@ define('APP_RUNNING', true);
 require 'db.php';
 require 'helpers.php';
 
-// Función para formatear la fecha en español
+// Función para formatear una fecha completa en español
 function fechaFormateadaEspañol($fechaISO) {
     $fecha = new DateTime($fechaISO);
     $formatter = new IntlDateFormatter(
@@ -17,10 +17,24 @@ function fechaFormateadaEspañol($fechaISO) {
     return ucfirst($formatter->format($fecha));
 }
 
+
+function encabezadoMesEspañol($fechaISO) {
+    $fecha = new DateTime($fechaISO);
+    $formatter = new IntlDateFormatter(
+        'es_MX',
+        IntlDateFormatter::LONG,
+        IntlDateFormatter::NONE,
+        'America/Mexico_City',
+        IntlDateFormatter::GREGORIAN,
+        "LLLL 'de' yyyy"
+    );
+    return ucfirst($formatter->format($fecha));
+}
+
 $cache_file = __DIR__ . '/tipo_cambio_cache.html';
 $cache_lifetime = 60;
 
-// Opción para invalidar cache manualmente con ?nocache=1
+
 if (isset($_GET['nocache']) && $_GET['nocache'] === '1') {
     @unlink($cache_file);
 }
@@ -44,16 +58,18 @@ $result = $query->get_result();
 $meses = [];
 while ($row = $result->fetch_assoc()) {
     $fecha = $row['FechaValor'];
-    $mesAnio = date('F Y', strtotime($fecha));
-    if (!isset($meses[$mesAnio])) {
-        $meses[$mesAnio] = ['registros' => [], 'suma' => 0, 'n' => 0];
+    $claveMes = encabezadoMesEspañol($fecha);  
+
+    if (!isset($meses[$claveMes])) {
+        $meses[$claveMes] = ['registros' => [], 'suma' => 0, 'n' => 0];
     }
-    $meses[$mesAnio]['registros'][] = [
+
+    $meses[$claveMes]['registros'][] = [
         'fecha_iso' => $fecha,
         'valor' => number_format($row['Valor'], 4)
     ];
-    $meses[$mesAnio]['suma'] += $row['Valor'];
-    $meses[$mesAnio]['n']++;
+    $meses[$claveMes]['suma'] += $row['Valor'];
+    $meses[$claveMes]['n']++;
 }
 reset($meses);
 $ultimoMes = current($meses);
