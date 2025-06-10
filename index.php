@@ -3,7 +3,7 @@ define('APP_RUNNING', true);
 require 'db.php';
 require 'helpers.php';
 
-// Función para formatear una fecha completa en español
+
 function fechaFormateadaEspañol($fechaISO) {
     $fecha = new DateTime($fechaISO);
     $formatter = new IntlDateFormatter(
@@ -34,7 +34,6 @@ function encabezadoMesEspañol($fechaISO) {
 $cache_file = __DIR__ . '/tipo_cambio_cache.html';
 $cache_lifetime = 60;
 
-
 if (isset($_GET['nocache']) && $_GET['nocache'] === '1') {
     @unlink($cache_file);
 }
@@ -58,7 +57,7 @@ $result = $query->get_result();
 $meses = [];
 while ($row = $result->fetch_assoc()) {
     $fecha = $row['FechaValor'];
-    $claveMes = encabezadoMesEspañol($fecha);  
+    $claveMes = encabezadoMesEspañol($fecha);
 
     if (!isset($meses[$claveMes])) {
         $meses[$claveMes] = ['registros' => [], 'suma' => 0, 'n' => 0];
@@ -88,35 +87,51 @@ $conn->close();
             font-family: "Segoe UI", Tahoma, sans-serif;
             background: url('https://img.freepik.com/fotos-premium/mazorcas-maiz-mesa-madera-telon-fondo-campo-maiz-al-atardecer_159938-2894.jpg') no-repeat center center fixed;
             background-size: cover;
-            color: #e0e0e0;
-            backdrop-filter: blur(5px);
-            text-align: center;
+            color: #f1f1f1;
             margin: 0;
             padding: 0;
         }
+
+        .logo-container {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+        }
+
+        .logo-container img {
+            height: 70px;
+            width: auto;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.6));
+        }
+
         .container {
-            background-color: rgba(20, 20, 20, 0.85);
-            margin: 2rem auto;
+            background-color: rgba(0, 0, 0, 0.7);
+            margin: 8rem auto 2rem;
             padding: 2rem 3rem;
             border-radius: 20px;
             width: 95%;
             max-width: 1000px;
             box-shadow: 0 0 25px rgba(0,0,0,0.4);
+            text-align: center;
         }
+
         h1 {
             color: #ffd54f;
             font-size: 2.5rem;
             margin-bottom: 10px;
         }
+
         h2 {
             font-weight: 400;
             margin: 1rem 0;
         }
+
         .highlight {
             font-weight: bold;
-            font-size: 2rem;
-            color: #4db6ac;
+            font-size: 1.8rem;
+            color: #00e676;
         }
+
         table {
             width: 100%;
             margin: 1rem auto;
@@ -126,14 +141,17 @@ $conn->close();
             border-radius: 10px;
             overflow: hidden;
         }
+
         th, td {
             padding: 14px;
             border-bottom: 1px solid #424242;
         }
+
         th {
             background-color: #37474f;
             color: #fff176;
         }
+
         h3 {
             color: #ffee58;
             margin-top: 2rem;
@@ -141,24 +159,28 @@ $conn->close();
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>Tipo de Cambio del Dólar</h1>
-    <h2>Fecha: <?= $fechaHoy ?> | Valor Actual: <span class="highlight">$<?= $valorHoy ?></span></h2>
+    <div class="logo-container">
+        <img src="logo-almex.png" alt="Logo ALMEX">
+    </div>
 
-    <?php foreach ($meses as $mes => $info): ?>
-        <h3><?= $mes ?></h3>
-        <table>
-            <tr><th>Fecha</th><th>Valor</th></tr>
-            <?php foreach ($info['registros'] as $r): ?>
-                <tr>
-                    <td><?= fechaFormateadaEspañol($r['fecha_iso']) ?></td>
-                    <td>$<?= $r['valor'] ?></td>
-                </tr>
-            <?php endforeach; ?>
-            <tr><th>Promedio:</th><th>$<?= number_format($info['suma'] / $info['n'], 4) ?></th></tr>
-        </table>
-    <?php endforeach; ?>
-</div>
+    <div class="container">
+        <h1>Tipo de Cambio del Dólar</h1>
+        <h2>Fecha: <?= $fechaHoy ?> | Valor Actual: <span class="highlight">$<?= $valorHoy ?></span></h2>
+
+        <?php foreach ($meses as $mes => $info): ?>
+            <h3><?= $mes ?></h3>
+            <table>
+                <tr><th>Fecha</th><th>Valor</th></tr>
+                <?php foreach ($info['registros'] as $r): ?>
+                    <tr>
+                        <td><?= fechaFormateadaEspañol($r['fecha_iso']) ?></td>
+                        <td>$<?= $r['valor'] ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                <tr><th>Promedio:</th><th>$<?= number_format($info['suma'] / $info['n'], 4) ?></th></tr>
+            </table>
+        <?php endforeach; ?>
+    </div>
 </body>
 </html>
 
