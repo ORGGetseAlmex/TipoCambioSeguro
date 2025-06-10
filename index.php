@@ -3,6 +3,20 @@ define('APP_RUNNING', true);
 require 'db.php';
 require 'helpers.php';
 
+// Función para formatear la fecha en español
+function fechaFormateadaEspañol($fechaISO) {
+    $fecha = new DateTime($fechaISO);
+    $formatter = new IntlDateFormatter(
+        'es_MX',
+        IntlDateFormatter::FULL,
+        IntlDateFormatter::NONE,
+        'America/Mexico_City',
+        IntlDateFormatter::GREGORIAN,
+        "EEEE d 'de' MMMM 'del' yyyy"
+    );
+    return ucfirst($formatter->format($fecha));
+}
+
 $cache_file = __DIR__ . '/tipo_cambio_cache.html';
 $cache_lifetime = 60;
 
@@ -35,7 +49,7 @@ while ($row = $result->fetch_assoc()) {
         $meses[$mesAnio] = ['registros' => [], 'suma' => 0, 'n' => 0];
     }
     $meses[$mesAnio]['registros'][] = [
-        'fecha' => date('d/m/Y', strtotime($fecha)),
+        'fecha_iso' => $fecha,
         'valor' => number_format($row['Valor'], 4)
     ];
     $meses[$mesAnio]['suma'] += $row['Valor'];
@@ -44,7 +58,7 @@ while ($row = $result->fetch_assoc()) {
 reset($meses);
 $ultimoMes = current($meses);
 $valorHoy = $ultimoMes['registros'][0]['valor'];
-$fechaHoy = $ultimoMes['registros'][0]['fecha'];
+$fechaHoy = fechaFormateadaEspañol($ultimoMes['registros'][0]['fecha_iso']);
 
 $conn->close();
 ?>
@@ -120,7 +134,10 @@ $conn->close();
         <table>
             <tr><th>Fecha</th><th>Valor</th></tr>
             <?php foreach ($info['registros'] as $r): ?>
-                <tr><td><?= $r['fecha'] ?></td><td>$<?= $r['valor'] ?></td></tr>
+                <tr>
+                    <td><?= fechaFormateadaEspañol($r['fecha_iso']) ?></td>
+                    <td>$<?= $r['valor'] ?></td>
+                </tr>
             <?php endforeach; ?>
             <tr><th>Promedio:</th><th>$<?= number_format($info['suma'] / $info['n'], 4) ?></th></tr>
         </table>
