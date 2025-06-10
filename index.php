@@ -180,7 +180,9 @@ $conn->close();
     <form method="get" action=""><input type="hidden" name="rango" value="anio"><button type="submit">Año</button></form>
     <form method="get" action=""><input type="hidden" name="rango" value="todo"><button type="submit">Todo</button></form>
 
-    <br><br><br><br><br><br>
+
+    <br>
+
 
     <div class="busqueda-box">
         <h4 style="color:#fff;text-align:center;">Buscar por Rango</h4>
