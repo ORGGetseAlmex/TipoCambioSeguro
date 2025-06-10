@@ -185,14 +185,22 @@ $conn->close();
 <div class="sidebar">
     <h3>Rango</h3>
     <form method="get">
-        <input type="hidden" name="rango" value="semana">
-        <button type="submit">Semana</button>
+    <input type="hidden" name="rango" value="semana">
+    <button type="submit">Semana</button>
+    </form>
+    <form method="get">
         <input type="hidden" name="rango" value="mes">
         <button type="submit">Mes</button>
+    </form>
+    <form method="get">
         <input type="hidden" name="rango" value="3meses">
         <button type="submit">3 Meses</button>
+    </form>
+    <form method="get">
         <input type="hidden" name="rango" value="anio">
         <button type="submit">Año</button>
+    </form>
+    <form method="get">
         <input type="hidden" name="rango" value="todo">
         <button type="submit">Todo</button>
     </form>
