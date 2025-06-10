@@ -194,33 +194,41 @@ $conn->close();
     <form method="get"><input type="hidden" name="rango" value="anio"><button type="submit">Año</button></form>
     <form method="get"><input type="hidden" name="rango" value="todo"><button type="submit">Todo</button></form>
 
-    <br>
+    <br><br><br><br><br><br><br><br><br><br> <!-- Espacio entre secciones -->
 
-    <h4>Buscar por Rango</h4>
-    <form method="get">
-        <label>Mes inicio:
-            <select name="mesInicio">
+    <h4 style="color:#fff176; font-size: 1.2rem;">Buscar por Rango</h4>
+    <form method="get" style="width: 100%; color: #fff;">
+        <?php setlocale(LC_TIME, 'es_MX.UTF-8', 'es_ES.UTF-8', 'spanish'); ?>
+        <label style="display:block; margin-bottom: 8px;">
+            Mes inicio:
+            <select name="mesInicio" style="width:100%; padding:4px; border-radius:6px;">
                 <?php for($i=1;$i<=12;$i++): ?>
-                    <option value="<?= $i ?>"><?= DateTime::createFromFormat('!m', $i)->format('F') ?></option>
+                    <option value="<?= $i ?>"><?= ucfirst(strftime('%B', mktime(0, 0, 0, $i, 1))) ?></option>
                 <?php endfor; ?>
             </select>
         </label>
-        <label>Año inicio:
-            <input type="number" name="anioInicio" value="<?= date('Y') ?>">
+        <label style="display:block; margin-bottom: 8px;">
+            Año inicio:
+            <input type="number" name="anioInicio" value="<?= date('Y') ?>" style="width:100%; padding:4px; border-radius:6px;">
         </label>
-        <label>Mes fin:
-            <select name="mesFin">
+        <label style="display:block; margin-bottom: 8px;">
+            Mes fin:
+            <select name="mesFin" style="width:100%; padding:4px; border-radius:6px;">
                 <?php for($i=1;$i<=12;$i++): ?>
-                    <option value="<?= $i ?>"><?= DateTime::createFromFormat('!m', $i)->format('F') ?></option>
+                    <option value="<?= $i ?>"><?= ucfirst(strftime('%B', mktime(0, 0, 0, $i, 1))) ?></option>
                 <?php endfor; ?>
             </select>
         </label>
-        <label>Año fin:
-            <input type="number" name="anioFin" value="<?= date('Y') ?>">
+        <label style="display:block; margin-bottom: 12px;">
+            Año fin:
+            <input type="number" name="anioFin" value="<?= date('Y') ?>" style="width:100%; padding:4px; border-radius:6px;">
         </label>
-        <button type="submit">Buscar</button>
+        <button type="submit" style="width:100%; padding:0.6rem; background-color:#00c853; color:white; font-weight:bold; border:none; border-radius:10px;">
+            Buscar
+        </button>
     </form>
 </div>
+
 
 <div class="main">
     <div class="container">
