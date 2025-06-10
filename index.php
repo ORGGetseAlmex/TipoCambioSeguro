@@ -107,7 +107,7 @@ $conn->close();
         }
 
         .logo-fijo img {
-            height: 120px;
+            height: 240px;
             width: auto;
             filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.7));
         }
