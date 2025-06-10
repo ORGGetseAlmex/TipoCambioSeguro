@@ -194,6 +194,14 @@ $conn->close();
     <form method="get"><input type="hidden" name="rango" value="anio"><button type="submit">Año</button></form>
     <form method="get"><input type="hidden" name="rango" value="todo"><button type="submit">Todo</button></form>
 
+    <?php
+    $meses_es = [
+        1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo',
+        4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
+        7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre',
+        10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+    ];
+    ?>
 
     <h4 style="color:#fff176; font-size: 1.2rem;">Buscar por Rango</h4>
     <form method="get" style="width: 100%; color: #fff;">
@@ -201,8 +209,8 @@ $conn->close();
         <label style="display:block; margin-bottom: 8px;">
             Mes inicio:
             <select name="mesInicio" style="width:100%; padding:4px; border-radius:6px;">
-                <?php for($i=1;$i<=12;$i++): ?>
-                    <option value="<?= $i ?>"><?= ucfirst(strftime('%B', mktime(0, 0, 0, $i, 1))) ?></option>
+                 <?php for ($i = 1; $i <= 12; $i++): ?>
+                    <option value="<?= $i ?>"><?= $meses_es[$i] ?></option>
                 <?php endfor; ?>
             </select>
         </label>
@@ -213,8 +221,8 @@ $conn->close();
         <label style="display:block; margin-bottom: 8px;">
             Mes fin:
             <select name="mesFin" style="width:100%; padding:4px; border-radius:6px;">
-                <?php for($i=1;$i<=12;$i++): ?>
-                    <option value="<?= $i ?>"><?= ucfirst(strftime('%B', mktime(0, 0, 0, $i, 1))) ?></option>
+                <?php for ($i = 1; $i <= 12; $i++): ?>
+                    <option value="<?= $i ?>"><?= $meses_es[$i] ?></option>
                 <?php endfor; ?>
             </select>
         </label>
