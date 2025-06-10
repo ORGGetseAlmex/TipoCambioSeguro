@@ -3,7 +3,7 @@ define('APP_RUNNING', true);
 require 'db.php';
 require 'helpers.php';
 
-
+// Formato: jueves 5 de junio del 2025
 function fechaFormateadaEspañol($fechaISO) {
     $fecha = new DateTime($fechaISO);
     $formatter = new IntlDateFormatter(
@@ -17,7 +17,7 @@ function fechaFormateadaEspañol($fechaISO) {
     return ucfirst($formatter->format($fecha));
 }
 
-
+// Encabezado: junio de 2025
 function encabezadoMesEspañol($fechaISO) {
     $fecha = new DateTime($fechaISO);
     $formatter = new IntlDateFormatter(
@@ -92,33 +92,32 @@ $conn->close();
             padding: 0;
         }
 
-            .logo-container {
-        position: absolute;
-        top: 20px;
-        right: 30px;
-        z-index: 10;
-        }
-
-        .logo-container img {
-            height: 240px;
-            width: auto;
-            filter: drop-shadow(2px 2px 6px rgba(0,0,0,0.7));
-            transition: transform 0.3s ease-in-out;
-        }
-
-        .logo-container img:hover {
-            transform: scale(1.05);
-        }
-
         .container {
             background-color: rgba(0, 0, 0, 0.7);
-            margin: 8rem auto 2rem;
+            margin: 2rem auto;
             padding: 2rem 3rem;
             border-radius: 20px;
             width: 95%;
             max-width: 1000px;
             box-shadow: 0 0 25px rgba(0,0,0,0.4);
             text-align: center;
+        }
+
+        .logo-centered {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .logo-centered img {
+            max-height: 240px;
+            width: auto;
+            filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.6));
+        }
+
+        @media (max-width: 768px) {
+            .logo-centered img {
+                max-height: 80px;
+            }
         }
 
         h1 {
@@ -165,11 +164,11 @@ $conn->close();
     </style>
 </head>
 <body>
-    <div class="logo-container">
-        <img src="logo-almex.png" alt="Logo ALMEX" >
-    </div>
-
     <div class="container">
+        <div class="logo-centered">
+            <img src="logo-almex.png" alt="Logo ALMEX">
+        </div>
+
         <h1>Tipo de Cambio del Dólar</h1>
         <h2>Fecha: <?= $fechaHoy ?> | Valor Actual: <span class="highlight">$<?= $valorHoy ?></span></h2>
 
