@@ -3,7 +3,6 @@ define('APP_RUNNING', true);
 require 'db.php';
 require 'helpers.php';
 
-
 function fechaFormateadaEspañol($fechaISO) {
     $fecha = new DateTime($fechaISO);
     $formatter = new IntlDateFormatter(
@@ -16,7 +15,6 @@ function fechaFormateadaEspañol($fechaISO) {
     );
     return ucfirst($formatter->format($fecha));
 }
-
 
 function encabezadoMesEspañol($fechaISO) {
     $fecha = new DateTime($fechaISO);
@@ -31,22 +29,27 @@ function encabezadoMesEspañol($fechaISO) {
     return ucfirst($formatter->format($fecha));
 }
 
-$cache_file = __DIR__ . '/tipo_cambio_cache.html';
-$cache_lifetime = 60;
-
-if (isset($_GET['nocache']) && $_GET['nocache'] === '1') {
-    @unlink($cache_file);
-}
-
-if (file_exists($cache_file) && (time() - filemtime($cache_file)) < $cache_lifetime) {
-    readfile($cache_file);
-    exit;
-}
-
-ob_start();
-
 $fechaFin = date("Y-m-d");
-$desde = $_GET['desde'] ?? "1991-11-21";
+$rango = $_GET['rango'] ?? '3meses';
+switch ($rango) {
+    case 'semana':
+        $desde = date("Y-m-d", strtotime("-7 days"));
+        break;
+    case 'mes':
+        $desde = date("Y-m-d", strtotime("-1 month"));
+        break;
+    case '3meses':
+        $desde = date("Y-m-d", strtotime("-3 months"));
+        break;
+    case 'anio':
+        $desde = date("Y-m-d", strtotime("-1 year"));
+        break;
+    case 'todo':
+        $desde = "1991-11-21";
+        break;
+    default:
+        $desde = date("Y-m-d", strtotime("-3 months"));
+}
 $hasta = $_GET['hasta'] ?? $fechaFin;
 
 $query = $conn->prepare("SELECT Valor, FechaValor FROM tblTipoCambio WHERE Moneda = '02' AND FechaValor BETWEEN ? AND ? ORDER BY FechaValor DESC");
@@ -83,6 +86,9 @@ $conn->close();
     <meta charset="UTF-8">
     <title>Tipo de Cambio Dólar</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
             font-family: "Segoe UI", Tahoma, sans-serif;
             background: url('https://img.freepik.com/fotos-premium/mazorcas-maiz-mesa-madera-telon-fondo-campo-maiz-al-atardecer_159938-2894.jpg') no-repeat center center fixed;
@@ -90,54 +96,68 @@ $conn->close();
             color: #f1f1f1;
             margin: 0;
             padding: 0;
+            display: flex;
         }
-
-            .logo-container {
-        position: absolute;
-        top: 20px;
-        right: 30px;
-        z-index: 10;
+        .sidebar {
+            background-color: rgba(0, 0, 0, 0.85);
+            padding: 2rem 1rem;
+            width: 220px;
+            height: 100vh;
+            position: fixed;
         }
-
-        .logo-container img {
-            height: 240px;
-            width: auto;
-            filter: drop-shadow(2px 2px 6px rgba(0,0,0,0.7));
-            transition: transform 0.3s ease-in-out;
-        }
-
-        .logo-container img:hover {
-            transform: scale(1.05);
-        }
-
-        .container {
-            background-color: rgba(0, 0, 0, 0.7);
-            margin: 8rem auto 2rem;
-            padding: 2rem 3rem;
-            border-radius: 20px;
-            width: 95%;
-            max-width: 1000px;
-            box-shadow: 0 0 25px rgba(0,0,0,0.4);
+        .sidebar h3 {
+            color: #ffee58;
+            margin-bottom: 1rem;
             text-align: center;
         }
-
+        .sidebar form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .sidebar button {
+            width: 100%;
+            padding: 0.6rem 1rem;
+            background-color: #37474f;
+            color: #fff176;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .sidebar button:hover {
+            background-color: #455a64;
+        }
+        .main {
+            margin-left: 240px;
+            padding: 3rem 2rem;
+            width: 100%;
+        }
+        .main .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 2rem 3rem;
+            border-radius: 20px;
+            max-width: 1000px;
+            margin: auto;
+            text-align: center;
+            box-shadow: 0 0 25px rgba(0,0,0,0.4);
+        }
         h1 {
             color: #ffd54f;
             font-size: 2.5rem;
             margin-bottom: 10px;
         }
-
         h2 {
             font-weight: 400;
             margin: 1rem 0;
         }
-
         .highlight {
             font-weight: bold;
             font-size: 1.8rem;
             color: #00e676;
         }
-
         table {
             width: 100%;
             margin: 1rem auto;
@@ -147,17 +167,14 @@ $conn->close();
             border-radius: 10px;
             overflow: hidden;
         }
-
         th, td {
             padding: 14px;
             border-bottom: 1px solid #424242;
         }
-
         th {
             background-color: #37474f;
             color: #fff176;
         }
-
         h3 {
             color: #ffee58;
             margin-top: 2rem;
@@ -165,10 +182,23 @@ $conn->close();
     </style>
 </head>
 <body>
-    <div class="logo-container">
-        <img src="logo-almex.png" alt="Logo ALMEX" >
-    </div>
+<div class="sidebar">
+    <h3>Rango</h3>
+    <form method="get">
+        <input type="hidden" name="rango" value="semana">
+        <button type="submit">Semana</button>
+        <input type="hidden" name="rango" value="mes">
+        <button type="submit">Mes</button>
+        <input type="hidden" name="rango" value="3meses">
+        <button type="submit">3 Meses</button>
+        <input type="hidden" name="rango" value="anio">
+        <button type="submit">Año</button>
+        <input type="hidden" name="rango" value="todo">
+        <button type="submit">Todo</button>
+    </form>
+</div>
 
+<div class="main">
     <div class="container">
         <h1>Tipo de Cambio del Dólar</h1>
         <h2>Fecha: <?= $fechaHoy ?> | Valor Actual: <span class="highlight">$<?= $valorHoy ?></span></h2>
@@ -187,12 +217,6 @@ $conn->close();
             </table>
         <?php endforeach; ?>
     </div>
+</div>
 </body>
 </html>
-
-<?php
-$contenido = ob_get_contents();
-ob_end_clean();
-file_put_contents($cache_file, $contenido);
-echo $contenido;
-?>
