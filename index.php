@@ -100,7 +100,7 @@ $conn->close();
         }
 
         .logo-container img {
-            height: 150px;
+            height: 240px;
             width: auto;
             filter: drop-shadow(2px 2px 6px rgba(0,0,0,0.7));
             transition: transform 0.3s ease-in-out;
