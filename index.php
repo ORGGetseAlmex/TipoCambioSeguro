@@ -98,6 +98,20 @@ $conn->close();
             padding: 0;
             display: flex;
         }
+
+        .logo-fijo {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .logo-fijo img {
+            height: 120px;
+            width: auto;
+            filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.7));
+        }
+
         .sidebar {
             background-color: rgba(0, 0, 0, 0.85);
             padding: 2rem 1rem;
@@ -109,15 +123,18 @@ $conn->close();
             align-items: center;
             gap: 1rem;
         }
+
         .sidebar h3 {
             color: #ffee58;
             margin-bottom: 1rem;
             text-align: center;
             font-size: 1.4rem;
         }
+
         .sidebar form {
             width: 100%;
         }
+
         .sidebar button {
             width: 100%;
             padding: 0.8rem;
@@ -131,14 +148,17 @@ $conn->close();
             margin-bottom: 0.5rem;
             font-size: 1rem;
         }
+
         .sidebar button:hover {
             background-color: #455a64;
         }
+
         .main {
             margin-left: 240px;
             padding: 3rem 2rem;
             width: 100%;
         }
+
         .main .container {
             background-color: rgba(0, 0, 0, 0.7);
             padding: 2rem 3rem;
@@ -148,20 +168,24 @@ $conn->close();
             text-align: center;
             box-shadow: 0 0 25px rgba(0,0,0,0.4);
         }
+
         h1 {
             color: #ffd54f;
             font-size: 2.5rem;
             margin-bottom: 10px;
         }
+
         h2 {
             font-weight: 400;
             margin: 1rem 0;
         }
+
         .highlight {
             font-weight: bold;
             font-size: 1.8rem;
             color: #00e676;
         }
+
         table {
             width: 100%;
             margin: 1rem auto;
@@ -171,14 +195,17 @@ $conn->close();
             border-radius: 10px;
             overflow: hidden;
         }
+
         th, td {
             padding: 14px;
             border-bottom: 1px solid #424242;
         }
+
         th {
             background-color: #37474f;
             color: #fff176;
         }
+
         h3 {
             color: #ffee58;
             margin-top: 2rem;
@@ -186,6 +213,10 @@ $conn->close();
     </style>
 </head>
 <body>
+<div class="logo-fijo">
+    <img src="logo-almex.png" alt="Logo ALMEX">
+</div>
+
 <div class="sidebar">
     <h3>Rango</h3>
     <form method="get">
