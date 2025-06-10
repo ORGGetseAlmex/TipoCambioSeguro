@@ -1,6 +1,4 @@
 <?php
-// Archivo: tipo_cambio.php
-
 define('APP_RUNNING', true);
 require 'db.php';
 require 'helpers.php';
