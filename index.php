@@ -1,4 +1,6 @@
 <?php
+// Archivo: tipo_cambio.php
+
 define('APP_RUNNING', true);
 require 'db.php';
 require 'helpers.php';
@@ -6,8 +8,11 @@ require 'helpers.php';
 function fechaFormateadaEspañol($fechaISO) {
     $fecha = new DateTime($fechaISO);
     $formatter = new IntlDateFormatter(
-        'es_MX', IntlDateFormatter::FULL, IntlDateFormatter::NONE,
-        'America/Mexico_City', IntlDateFormatter::GREGORIAN,
+        'es_MX',
+        IntlDateFormatter::FULL,
+        IntlDateFormatter::NONE,
+        'America/Mexico_City',
+        IntlDateFormatter::GREGORIAN,
         "EEEE d 'de' MMMM 'del' yyyy"
     );
     return ucfirst($formatter->format($fecha));
@@ -16,30 +21,44 @@ function fechaFormateadaEspañol($fechaISO) {
 function encabezadoMesEspañol($fechaISO) {
     $fecha = new DateTime($fechaISO);
     $formatter = new IntlDateFormatter(
-        'es_MX', IntlDateFormatter::LONG, IntlDateFormatter::NONE,
-        'America/Mexico_City', IntlDateFormatter::GREGORIAN,
+        'es_MX',
+        IntlDateFormatter::LONG,
+        IntlDateFormatter::NONE,
+        'America/Mexico_City',
+        IntlDateFormatter::GREGORIAN,
         "LLLL 'de' yyyy"
     );
     return ucfirst($formatter->format($fecha));
 }
 
 $fechaFin = date("Y-m-d");
-$rango = $_GET['rango'] ?? '3meses';
-switch ($rango) {
-    case 'semana':
-        $desde = date("Y-m-d", strtotime("-7 days")); break;
-    case 'mes':
-        $desde = date("Y-m-d", strtotime("-1 month")); break;
-    case '3meses':
-        $desde = date("Y-m-d", strtotime("-3 months")); break;
-    case 'anio':
-        $desde = date("Y-m-d", strtotime("-1 year")); break;
-    case 'todo':
-        $desde = "1991-11-21"; break;
-    default:
-        $desde = date("Y-m-d", strtotime("-3 months"));
+
+if (isset($_GET['mesInicio']) && isset($_GET['anioInicio']) && isset($_GET['mesFin']) && isset($_GET['anioFin'])) {
+    $desde = date("Y-m-d", strtotime($_GET['anioInicio'] . '-' . $_GET['mesInicio'] . '-01'));
+    $hasta = date("Y-m-t", strtotime($_GET['anioFin'] . '-' . $_GET['mesFin'] . '-01'));
+} else {
+    $rango = $_GET['rango'] ?? '3meses';
+    switch ($rango) {
+        case 'semana':
+            $desde = date("Y-m-d", strtotime("-7 days"));
+            break;
+        case 'mes':
+            $desde = date("Y-m-d", strtotime("-1 month"));
+            break;
+        case '3meses':
+            $desde = date("Y-m-d", strtotime("-3 months"));
+            break;
+        case 'anio':
+            $desde = date("Y-m-d", strtotime("-1 year"));
+            break;
+        case 'todo':
+            $desde = "1991-11-21";
+            break;
+        default:
+            $desde = date("Y-m-d", strtotime("-3 months"));
+    }
+    $hasta = $_GET['hasta'] ?? $fechaFin;
 }
-$hasta = $_GET['hasta'] ?? $fechaFin;
 
 $query = $conn->prepare("SELECT Valor, FechaValor FROM tblTipoCambio WHERE Moneda = '02' AND FechaValor BETWEEN ? AND ? ORDER BY FechaValor DESC");
 $query->bind_param("ss", $desde, $hasta);
@@ -50,9 +69,11 @@ $meses = [];
 while ($row = $result->fetch_assoc()) {
     $fecha = $row['FechaValor'];
     $claveMes = encabezadoMesEspañol($fecha);
+
     if (!isset($meses[$claveMes])) {
         $meses[$claveMes] = ['registros' => [], 'suma' => 0, 'n' => 0];
     }
+
     $meses[$claveMes]['registros'][] = [
         'fecha_iso' => $fecha,
         'valor' => number_format($row['Valor'], 4)
@@ -64,6 +85,7 @@ reset($meses);
 $ultimoMes = current($meses);
 $valorHoy = $ultimoMes['registros'][0]['valor'];
 $fechaHoy = fechaFormateadaEspañol($ultimoMes['registros'][0]['fecha_iso']);
+
 $conn->close();
 ?>
 <!DOCTYPE html>
@@ -96,45 +118,45 @@ $conn->close();
         .sidebar {
             background-color: rgba(0, 0, 0, 0.85);
             padding: 2rem 1rem;
-            width: 220px;
+            width: 240px;
             height: 100vh;
             position: fixed;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 1rem;
+            overflow-y: auto;
         }
-        .sidebar h3 {
+        .sidebar h3, .sidebar h4 {
             color: #ffee58;
             margin-bottom: 1rem;
             text-align: center;
-            font-size: 1.4rem;
         }
         .sidebar form {
             width: 100%;
         }
-        .sidebar button {
+        .sidebar button, .sidebar select, .sidebar input[type="number"] {
             width: 100%;
-            padding: 0.8rem;
-            background-color: #37474f;
-            color: #fff176;
+            padding: 0.6rem;
+            margin-bottom: 0.5rem;
             border: none;
             border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.2s;
-            margin-bottom: 0.5rem;
             font-size: 1rem;
+        }
+        .sidebar button {
+            background-color: #37474f;
+            color: #fff176;
+            cursor: pointer;
         }
         .sidebar button:hover {
             background-color: #455a64;
         }
         .main {
-            margin-left: 240px;
+            margin-left: 260px;
             padding: 3rem 2rem;
             width: 100%;
         }
-        .main .container {
+        .container {
             background-color: rgba(0, 0, 0, 0.7);
             padding: 2rem 3rem;
             border-radius: 20px;
@@ -143,7 +165,7 @@ $conn->close();
             text-align: center;
             box-shadow: 0 0 25px rgba(0,0,0,0.4);
         }
-        h1 { color: #ffd54f; font-size: 2.5rem; margin-bottom: 10px; }
+        h1 { color: #ffd54f; font-size: 2.5rem; }
         h2 { font-weight: 400; margin: 1rem 0; }
         .highlight { font-weight: bold; font-size: 1.8rem; color: #00e676; }
         table {
@@ -152,54 +174,52 @@ $conn->close();
             background-color: #212121;
             color: #e0e0e0;
             border-radius: 10px;
-            overflow: hidden;
         }
-        th, td { padding: 14px; border-bottom: 1px solid #424242; }
+        th, td {
+            padding: 14px;
+            border-bottom: 1px solid #424242;
+        }
         th { background-color: #37474f; color: #fff176; }
         h3 { color: #ffee58; margin-top: 2rem; }
-        .busqueda-box select, .busqueda-box input {
-            margin-bottom: 0.5rem;
-            width: 100%;
-            padding: 0.3rem;
-            border-radius: 8px;
-            border: none;
-        }
-        .resaltado { background-color: #33691e !important; color: #fff !important; }
     </style>
 </head>
 <body>
-<div class="logo-fijo">
-    <img src="logo-almex.png" alt="Logo ALMEX">
-</div>
+<div class="logo-fijo"><img src="logo-almex.png" alt="Logo ALMEX"></div>
 
 <div class="sidebar">
     <h3>Rango</h3>
-    <form method="get" action=""><input type="hidden" name="rango" value="semana"><button type="submit">Semana</button></form>
-    <form method="get" action=""><input type="hidden" name="rango" value="mes"><button type="submit">Mes</button></form>
-    <form method="get" action=""><input type="hidden" name="rango" value="3meses"><button type="submit">3 Meses</button></form>
-    <form method="get" action=""><input type="hidden" name="rango" value="anio"><button type="submit">Año</button></form>
-    <form method="get" action=""><input type="hidden" name="rango" value="todo"><button type="submit">Todo</button></form>
+    <form method="get"><input type="hidden" name="rango" value="semana"><button type="submit">Semana</button></form>
+    <form method="get"><input type="hidden" name="rango" value="mes"><button type="submit">Mes</button></form>
+    <form method="get"><input type="hidden" name="rango" value="3meses"><button type="submit">3 Meses</button></form>
+    <form method="get"><input type="hidden" name="rango" value="anio"><button type="submit">Año</button></form>
+    <form method="get"><input type="hidden" name="rango" value="todo"><button type="submit">Todo</button></form>
 
+    <br><br><br><br><br><br><br><br><br><br>
 
-    <br>
-
-
-    <div class="busqueda-box">
-        <h4 style="color:#fff;text-align:center;">Buscar por Rango</h4>
+    <h4>Buscar por Rango</h4>
+    <form method="get">
         <label>Mes inicio:
-            <select id="mesInicio"><?php for($i=1;$i<=12;$i++): ?>
-                <option value="<?= $i ?>"><?= DateTime::createFromFormat('!m', $i)->format('F') ?></option>
-            <?php endfor; ?></select>
+            <select name="mesInicio">
+                <?php for($i=1;$i<=12;$i++): ?>
+                    <option value="<?= $i ?>"><?= DateTime::createFromFormat('!m', $i)->format('F') ?></option>
+                <?php endfor; ?>
+            </select>
         </label>
-        <label>Año inicio: <input type="number" id="anioInicio" value="<?= date('Y') ?>"></label>
+        <label>Año inicio:
+            <input type="number" name="anioInicio" value="<?= date('Y') ?>">
+        </label>
         <label>Mes fin:
-            <select id="mesFin"><?php for($i=1;$i<=12;$i++): ?>
-                <option value="<?= $i ?>"><?= DateTime::createFromFormat('!m', $i)->format('F') ?></option>
-            <?php endfor; ?></select>
+            <select name="mesFin">
+                <?php for($i=1;$i<=12;$i++): ?>
+                    <option value="<?= $i ?>"><?= DateTime::createFromFormat('!m', $i)->format('F') ?></option>
+                <?php endfor; ?>
+            </select>
         </label>
-        <label>Año fin: <input type="number" id="anioFin" value="<?= date('Y') ?>"></label>
-        <button type="button" onclick="buscarPorRango()">Buscar</button>
-    </div>
+        <label>Año fin:
+            <input type="number" name="anioFin" value="<?= date('Y') ?>">
+        </label>
+        <button type="submit">Buscar</button>
+    </form>
 </div>
 
 <div class="main">
@@ -213,7 +233,7 @@ $conn->close();
                 <tr><th>Fecha</th><th>Valor</th></tr>
                 <?php foreach ($info['registros'] as $r): ?>
                     <tr>
-                        <td class="fecha"><?= fechaFormateadaEspañol($r['fecha_iso']) ?></td>
+                        <td><?= fechaFormateadaEspañol($r['fecha_iso']) ?></td>
                         <td>$<?= $r['valor'] ?></td>
                     </tr>
                 <?php endforeach; ?>
@@ -222,32 +242,5 @@ $conn->close();
         <?php endforeach; ?>
     </div>
 </div>
-
-<script>
-function buscarPorRango() {
-    const mesInicio = parseInt(document.getElementById('mesInicio').value);
-    const anioInicio = parseInt(document.getElementById('anioInicio').value);
-    const mesFin = parseInt(document.getElementById('mesFin').value);
-    const anioFin = parseInt(document.getElementById('anioFin').value);
-    const inicio = new Date(anioInicio, mesInicio - 1, 1);
-    const fin = new Date(anioFin, mesFin, 0);
-
-    document.querySelectorAll("td.fecha").forEach(td => {
-        const texto = td.innerText;
-        const partes = texto.match(/(\d{1,2}) de (\w+) del (\d{4})/);
-        if (partes) {
-            const dia = parseInt(partes[1]);
-            const mes = new Date(Date.parse(partes[2] + " 1, 2000")).getMonth();
-            const anio = parseInt(partes[3]);
-            const fecha = new Date(anio, mes, dia);
-            if (fecha >= inicio && fecha <= fin) {
-                td.parentElement.classList.add("resaltado");
-            } else {
-                td.parentElement.classList.remove("resaltado");
-            }
-        }
-    });
-}
-</script>
 </body>
 </html>
