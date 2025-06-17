@@ -10,10 +10,10 @@ if (!$token) {
     echo "Error: BANXICO_TOKEN no está definido en variables de entorno.\n";
     exit(1);
 }
-
 $fechaFin = date("Y-m-d");
 
 try {
+<<<<<<< HEAD
     
     $conn->query("CREATE TABLE IF NOT EXISTS tblTipoCambio (
         Id INT AUTO_INCREMENT PRIMARY KEY,
@@ -31,6 +31,8 @@ try {
         ultima_actualizacion DATE
     )");
 
+=======
+>>>>>>> dev
    
     $checkIndex = $conn->query("SHOW INDEX FROM tblTipoCambio WHERE Key_name = 'uniq_fecha_moneda'");
     if ($checkIndex->num_rows === 0) {
@@ -62,7 +64,6 @@ try {
         exit(0);
     }
 
-    
     $url = "https://www.banxico.org.mx/SieAPIRest/service/v1/series/SF60653/datos/$fechaInicio/$fechaFin?token=$token";
     $response = @file_get_contents($url);
 
@@ -83,6 +84,7 @@ try {
         exit(0);
     }
 
+<<<<<<< HEAD
     
     $stmt = $conn->prepare("INSERT IGNORE INTO tblTipoCambio (Valor, FechaValor, FechaEmision, FechaLiquidacion, Moneda) VALUES (?, ?, ?, ?, '02')");
 
@@ -96,6 +98,45 @@ try {
     $stmt->close();
 
    
+=======
+$conn->begin_transaction();
+
+$insertSQL = "INSERT IGNORE INTO tblTipoCambio (Valor, FechaValor, FechaEmision, FechaLiquidacion, Moneda) VALUES ";
+$placeholders = [];
+$params = [];
+$types = "";
+
+foreach ($registros as $item) {
+    $fecha = DateTime::createFromFormat('d/m/Y', $item['fecha'])->format('Y-m-d');
+    $valor = floatval($item['dato']);
+
+    $placeholders[] = "(?, ?, ?, ?, '02')";
+    $params[] = $valor;
+    $params[] = $fecha;
+    $params[] = $fecha;
+    $params[] = $fecha;
+    $types .= "dsss";
+}
+
+$insertSQL .= implode(", ", $placeholders);
+
+$stmt = $conn->prepare($insertSQL);
+
+if ($stmt === false) {
+    die("Error en prepare: " . $conn->error);
+}
+
+$tmp = [];
+$tmp[] = &$types;
+foreach ($params as $key => $value) {
+    $tmp[] = &$params[$key];
+}
+call_user_func_array([$stmt, 'bind_param'], $tmp);
+$stmt->execute();
+$conn->commit();
+$stmt->close();
+
+>>>>>>> dev
     $hoy = date("Y-m-d");
     $conn->query("INSERT INTO tblTipoCambioStatus (ultima_actualizacion) VALUES ('$hoy')");
 
