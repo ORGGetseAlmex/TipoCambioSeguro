@@ -92,7 +92,7 @@ $meses[$claveMes]['n']++;
     }
 }
 
-// Fallback si no hay valor de hoy
+
 if (!$valorHoy && !empty($meses)) {
     reset($meses);
     $primerMes = current($meses);
@@ -250,7 +250,7 @@ $conn->close();
         <button type="submit" style="background-color:#00c853; color:white;">Buscar</button>
     </form>
 
-    <!-- Checkbox decorado con autoenvío -->
+    
     <div class="custom-check">
         <input type="checkbox" id="festivoToggle" <?= $excluirFestivos ? 'checked' : '' ?>>
         <label for="festivoToggle">Excluir días festivos</label>
