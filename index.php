@@ -30,53 +30,39 @@ function fechaMesLargoEspañol($ym) {
     return ucfirst($formatter->format($fecha));
 }
 
-// Hardcodeo de días festivos
+// Días festivos hardcodeados
 $diasFestivosHardcoded = [
-    '2025-01-01', // Año Nuevo
-    '2025-02-05', // Constitución
-    '2025-03-21', // Benito Juárez
-    '2025-05-01', // Día del Trabajo
-    '2025-09-16', // Independencia
-    '2025-11-20', // Revolución
-    '2025-12-25', // Navidad
+    '2025-01-01', '2025-02-05', '2025-03-21',
+    '2025-05-01', '2025-09-16', '2025-11-20', '2025-12-25',
 ];
 
 $excluirFestivos = isset($_GET['excluirFestivos']);
-
 $fechaFin = date("Y-m-d");
 
-if (isset($_GET['mesInicio']) && isset($_GET['anioInicio']) && isset($_GET['mesFin']) && isset($_GET['anioFin'])) {
+// Determinar rango de fechas
+if (isset($_GET['mesInicio'], $_GET['anioInicio'], $_GET['mesFin'], $_GET['anioFin'])) {
     $desde = date("Y-m-d", strtotime($_GET['anioInicio'] . '-' . $_GET['mesInicio'] . '-01'));
     $hasta = date("Y-m-t", strtotime($_GET['anioFin'] . '-' . $_GET['mesFin'] . '-01'));
 } else {
     $rango = $_GET['rango'] ?? '3meses';
     switch ($rango) {
-        case 'semana':
-            $desde = date("Y-m-d", strtotime("-7 days"));
-            break;
-        case 'mes':
-            $desde = date("Y-m-d", strtotime("-1 month"));
-            break;
-        case '3meses':
-            $desde = date("Y-m-d", strtotime("-3 months"));
-            break;
-        case 'anio':
-            $desde = date("Y-m-d", strtotime("-1 year"));
-            break;
-        case 'todo':
-            $desde = "1991-11-21";
-            break;
-        default:
-            $desde = date("Y-m-d", strtotime("-3 months"));
+        case 'semana': $desde = date("Y-m-d", strtotime("-7 days")); break;
+        case 'mes': $desde = date("Y-m-d", strtotime("-1 month")); break;
+        case '3meses': $desde = date("Y-m-d", strtotime("-3 months")); break;
+        case 'anio': $desde = date("Y-m-d", strtotime("-1 year")); break;
+        case 'todo': $desde = "1991-11-21"; break;
+        default: $desde = date("Y-m-d", strtotime("-3 months"));
     }
     $hasta = $_GET['hasta'] ?? $fechaFin;
 }
 
+// Consulta tipo de cambio
 $query = $conn->prepare("SELECT Valor, FechaValor FROM tblTipoCambio WHERE Moneda = '02' AND FechaValor BETWEEN ? AND ? ORDER BY FechaValor DESC");
 $query->bind_param("ss", $desde, $hasta);
 $query->execute();
 $result = $query->get_result();
 
+// Agrupar y procesar resultados
 $meses = [];
 $valorHoy = null;
 $fechaHoy = null;
@@ -85,9 +71,7 @@ $fechaActual = date("Y-m-d");
 while ($row = $result->fetch_assoc()) {
     $fecha = $row['FechaValor'];
 
-    if ($excluirFestivos && in_array($fecha, $diasFestivosHardcoded)) {
-        continue;
-    }
+    if ($excluirFestivos && in_array($fecha, $diasFestivosHardcoded)) continue;
 
     $claveMes = date('Y-m', strtotime($fecha));
     if (!isset($meses[$claveMes])) {
@@ -107,7 +91,8 @@ while ($row = $result->fetch_assoc()) {
     }
 }
 
-if (!$valorHoy) {
+// Fallback si no hay valor de hoy
+if (!$valorHoy && !empty($meses)) {
     reset($meses);
     $primerMes = current($meses);
     $primerRegistro = $primerMes['registros'][0];
@@ -117,6 +102,7 @@ if (!$valorHoy) {
 
 $conn->close();
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -198,7 +184,8 @@ $conn->close();
         h2 { font-weight: 400; margin: 1rem 0; }
         .highlight { font-weight: bold; font-size: 1.8rem; color: #00e676; }
         table {
-            width: 100%; margin: 1rem auto;
+            width: 100%;
+            margin: 1rem auto;
             border-collapse: collapse;
             background-color: #212121;
             color: #e0e0e0;
@@ -210,8 +197,19 @@ $conn->close();
         }
         th { background-color: #37474f; color: #fff176; }
         h3 { color: #ffee58; margin-top: 2rem; }
-        .checkbox-label {
-            color: #fff; font-size: 0.9rem;
+        .custom-check {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            color: #fff176;
+            font-size: 1rem;
+        }
+        .custom-check input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #00e676;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -235,40 +233,39 @@ $conn->close();
 
     <h4>Buscar por Rango</h4>
     <form method="get">
-        <?php
-        $meses_es = [
-            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo',
-            4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
-            7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre',
-            10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
-        ];
-        ?>
+        <?php $meses_es = [1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre']; ?>
         <label>Mes inicio:
-            <select name="mesInicio">
-                <?php for ($i = 1; $i <= 12; $i++): ?>
-                    <option value="<?= $i ?>"><?= $meses_es[$i] ?></option>
-                <?php endfor; ?>
-            </select>
+            <select name="mesInicio"><?php for ($i = 1; $i <= 12; $i++): ?><option value="<?= $i ?>"><?= $meses_es[$i] ?></option><?php endfor; ?></select>
         </label>
         <label>Año inicio:
             <input type="number" name="anioInicio" value="<?= date('Y') ?>">
         </label>
         <label>Mes fin:
-            <select name="mesFin">
-                <?php for ($i = 1; $i <= 12; $i++): ?>
-                    <option value="<?= $i ?>"><?= $meses_es[$i] ?></option>
-                <?php endfor; ?>
-            </select>
+            <select name="mesFin"><?php for ($i = 1; $i <= 12; $i++): ?><option value="<?= $i ?>"><?= $meses_es[$i] ?></option><?php endfor; ?></select>
         </label>
         <label>Año fin:
             <input type="number" name="anioFin" value="<?= date('Y') ?>">
         </label>
-        <label class="checkbox-label">
-            <input type="checkbox" name="excluirFestivos" value="1" <?= $excluirFestivos ? 'checked' : '' ?>>
-            Excluir días festivos
-        </label>
         <button type="submit" style="background-color:#00c853; color:white;">Buscar</button>
     </form>
+
+    <!-- Checkbox decorado con autoenvío -->
+    <div class="custom-check">
+        <input type="checkbox" id="festivoToggle" <?= $excluirFestivos ? 'checked' : '' ?>>
+        <label for="festivoToggle">Excluir días festivos</label>
+    </div>
+
+    <script>
+        document.getElementById('festivoToggle').addEventListener('change', function () {
+            const url = new URL(window.location.href);
+            if (this.checked) {
+                url.searchParams.set('excluirFestivos', '1');
+            } else {
+                url.searchParams.delete('excluirFestivos');
+            }
+            window.location.href = url.toString();
+        });
+    </script>
 </div>
 
 <div class="main">
