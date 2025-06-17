@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Mexico_City');
 define('APP_RUNNING', true);
 require 'db.php';
 require 'helpers.php';
