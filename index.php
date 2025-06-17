@@ -79,11 +79,12 @@ while ($row = $result->fetch_assoc()) {
     }
 
     $meses[$claveMes]['registros'][] = [
-        'fecha_iso' => $fecha,
-        'valor' => number_format($row['Valor'], 4)
-    ];
-    $meses[$claveMes]['suma'] += $row['Valor'];
-    $meses[$claveMes]['n']++;
+    'fecha_iso' => $fecha,
+    'valor' => $row['Valor'] 
+];
+$meses[$claveMes]['suma'] += $row['Valor'];
+$meses[$claveMes]['n']++;
+
 
     if ($fecha === $fechaActual && !$valorHoy) {
         $valorHoy = number_format($row['Valor'], 4);
