@@ -147,7 +147,7 @@ $conn->close();
         .sidebar {
             background-color: rgba(0, 0, 0, 0.85);
             padding: 2rem 1rem;
-            width: 240px;
+            width: 260px;
             height: 100vh;
             position: fixed;
             display: flex;
@@ -181,7 +181,7 @@ $conn->close();
             background-color: #455a64;
         }
         .main {
-            margin-left: 260px;
+            margin-left: 280px;
             padding: 3rem 2rem;
             width: 100%;
         }
@@ -210,6 +210,9 @@ $conn->close();
         }
         th { background-color: #37474f; color: #fff176; }
         h3 { color: #ffee58; margin-top: 2rem; }
+        .checkbox-label {
+            color: #fff; font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -217,51 +220,54 @@ $conn->close();
 
 <div class="sidebar">
     <h3>Rango</h3>
-    <form method="get"><input type="hidden" name="rango" value="semana"><button type="submit">Semana</button></form>
-    <form method="get"><input type="hidden" name="rango" value="mes"><button type="submit">Mes</button></form>
-    <form method="get"><input type="hidden" name="rango" value="3meses"><button type="submit">3 Meses</button></form>
-    <form method="get"><input type="hidden" name="rango" value="anio"><button type="submit">Año</button></form>
-    <form method="get"><input type="hidden" name="rango" value="todo"><button type="submit">Todo</button></form>
-
     <?php
-    $meses_es = [
-        1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo',
-        4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
-        7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre',
-        10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
-    ];
+    $rangoLinks = ['semana' => 'Semana', 'mes' => 'Mes', '3meses' => '3 Meses', 'anio' => 'Año', 'todo' => 'Todo'];
+    foreach ($rangoLinks as $clave => $texto):
     ?>
+    <form method="get">
+        <input type="hidden" name="rango" value="<?= $clave ?>">
+        <?php if ($excluirFestivos): ?>
+            <input type="hidden" name="excluirFestivos" value="1">
+        <?php endif; ?>
+        <button type="submit"><?= $texto ?></button>
+    </form>
+    <?php endforeach; ?>
 
-    <h4 style="color:#fff176; font-size: 1.2rem;">Buscar por Rango</h4>
-    <form method="get" style="width: 100%; color: #fff;">
-        <?php setlocale(LC_TIME, 'es_MX.UTF-8', 'es_ES.UTF-8', 'spanish'); ?>
-        <label style="display:block; margin-bottom: 8px;">
-            Mes inicio:
-            <select name="mesInicio" style="width:100%; padding:4px; border-radius:6px;">
-                 <?php for ($i = 1; $i <= 12; $i++): ?>
-                    <option value="<?= $i ?>"><?= $meses_es[$i] ?></option>
-                <?php endfor; ?>
-            </select>
-        </label>
-        <label style="display:block; margin-bottom: 8px;">
-            Año inicio:
-            <input type="number" name="anioInicio" value="<?= date('Y') ?>" style="width:100%; padding:4px; border-radius:6px;">
-        </label>
-        <label style="display:block; margin-bottom: 8px;">
-            Mes fin:
-            <select name="mesFin" style="width:100%; padding:4px; border-radius:6px;">
+    <h4>Buscar por Rango</h4>
+    <form method="get">
+        <?php
+        $meses_es = [
+            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo',
+            4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
+            7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre',
+            10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+        ];
+        ?>
+        <label>Mes inicio:
+            <select name="mesInicio">
                 <?php for ($i = 1; $i <= 12; $i++): ?>
                     <option value="<?= $i ?>"><?= $meses_es[$i] ?></option>
                 <?php endfor; ?>
             </select>
         </label>
-        <label style="display:block; margin-bottom: 12px;">
-            Año fin:
-            <input type="number" name="anioFin" value="<?= date('Y') ?>" style="width:100%; padding:4px; border-radius:6px;">
+        <label>Año inicio:
+            <input type="number" name="anioInicio" value="<?= date('Y') ?>">
         </label>
-        <button type="submit" style="width:100%; padding:0.6rem; background-color:#00c853; color:white; font-weight:bold; border:none; border-radius:10px;">
-            Buscar
-        </button>
+        <label>Mes fin:
+            <select name="mesFin">
+                <?php for ($i = 1; $i <= 12; $i++): ?>
+                    <option value="<?= $i ?>"><?= $meses_es[$i] ?></option>
+                <?php endfor; ?>
+            </select>
+        </label>
+        <label>Año fin:
+            <input type="number" name="anioFin" value="<?= date('Y') ?>">
+        </label>
+        <label class="checkbox-label">
+            <input type="checkbox" name="excluirFestivos" value="1" <?= $excluirFestivos ? 'checked' : '' ?>>
+            Excluir días festivos
+        </label>
+        <button type="submit" style="background-color:#00c853; color:white;">Buscar</button>
     </form>
 </div>
 
