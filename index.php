@@ -39,7 +39,7 @@ $diasFestivosHardcoded = [
 $excluirFestivos = isset($_GET['excluirFestivos']);
 $fechaFin = date("Y-m-d");
 
-// Determinar rango de fechas
+
 if (isset($_GET['mesInicio'], $_GET['anioInicio'], $_GET['mesFin'], $_GET['anioFin'])) {
     $desde = date("Y-m-d", strtotime($_GET['anioInicio'] . '-' . $_GET['mesInicio'] . '-01'));
     $hasta = date("Y-m-t", strtotime($_GET['anioFin'] . '-' . $_GET['mesFin'] . '-01'));
@@ -56,13 +56,13 @@ if (isset($_GET['mesInicio'], $_GET['anioInicio'], $_GET['mesFin'], $_GET['anioF
     $hasta = $_GET['hasta'] ?? $fechaFin;
 }
 
-// Consulta tipo de cambio
+
 $query = $conn->prepare("SELECT Valor, FechaValor FROM tblTipoCambio WHERE Moneda = '02' AND FechaValor BETWEEN ? AND ? ORDER BY FechaValor DESC");
 $query->bind_param("ss", $desde, $hasta);
 $query->execute();
 $result = $query->get_result();
 
-// Agrupar y procesar resultados
+
 $meses = [];
 $valorHoy = null;
 $fechaHoy = null;
