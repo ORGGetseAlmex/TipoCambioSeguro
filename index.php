@@ -16,19 +16,6 @@ function fechaFormateadaEspañol($fechaISO) {
     return ucfirst($formatter->format($fecha));
 }
 
-function encabezadoMesEspañol($fechaISO) {
-    $fecha = new DateTime($fechaISO);
-    $formatter = new IntlDateFormatter(
-        'es_MX',
-        IntlDateFormatter::LONG,
-        IntlDateFormatter::NONE,
-        'America/Mexico_City',
-        IntlDateFormatter::GREGORIAN,
-        "LLLL 'de' yyyy"
-    );
-    return ucfirst($formatter->format($fecha));
-}
-
 $fechaFin = date("Y-m-d");
 
 if (isset($_GET['mesInicio']) && isset($_GET['anioInicio']) && isset($_GET['mesFin']) && isset($_GET['anioFin'])) {
@@ -64,9 +51,13 @@ $query->execute();
 $result = $query->get_result();
 
 $meses = [];
+$valorHoy = null;
+$fechaHoy = null;
+$fechaActual = date("Y-m-d");
+
 while ($row = $result->fetch_assoc()) {
     $fecha = $row['FechaValor'];
-    $claveMes = encabezadoMesEspañol($fecha);
+    $claveMes = date('F Y', strtotime($fecha)); // en inglés, como 'June 2025'
 
     if (!isset($meses[$claveMes])) {
         $meses[$claveMes] = ['registros' => [], 'suma' => 0, 'n' => 0];
@@ -78,11 +69,22 @@ while ($row = $result->fetch_assoc()) {
     ];
     $meses[$claveMes]['suma'] += $row['Valor'];
     $meses[$claveMes]['n']++;
+
+    // Buscar valor de hoy
+    if ($fecha === $fechaActual && !$valorHoy) {
+        $valorHoy = number_format($row['Valor'], 4);
+        $fechaHoy = fechaFormateadaEspañol($fecha);
+    }
 }
-reset($meses);
-$ultimoMes = current($meses);
-$valorHoy = $ultimoMes['registros'][0]['valor'];
-$fechaHoy = fechaFormateadaEspañol($ultimoMes['registros'][0]['fecha_iso']);
+
+// Fallback si no se encontró el de hoy
+if (!$valorHoy) {
+    reset($meses);
+    $primerMes = current($meses);
+    $primerRegistro = $primerMes['registros'][0];
+    $valorHoy = $primerRegistro['valor'];
+    $fechaHoy = fechaFormateadaEspañol($primerRegistro['fecha_iso']);
+}
 
 $conn->close();
 ?>
