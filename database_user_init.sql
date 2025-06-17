@@ -40,5 +40,12 @@ CREATE TABLE IF NOT EXISTS tblTipoCambioStatus (
     ultima_actualizacion DATE
 );
 
+CREATE TABLE IF NOT EXISTS dias_festivos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    fecha DATE NOT NULL UNIQUE,
+    descripcion VARCHAR(100),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 ALTER TABLE tblTipoCambio 
 ADD UNIQUE KEY uniq_fecha_moneda (FechaValor, Moneda);
