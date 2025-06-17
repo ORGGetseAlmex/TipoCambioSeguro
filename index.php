@@ -30,6 +30,19 @@ function fechaMesLargoEspañol($ym) {
     return ucfirst($formatter->format($fecha));
 }
 
+// Hardcodeo de días festivos
+$diasFestivosHardcoded = [
+    '2025-01-01', // Año Nuevo
+    '2025-02-05', // Constitución
+    '2025-03-21', // Benito Juárez
+    '2025-05-01', // Día del Trabajo
+    '2025-09-16', // Independencia
+    '2025-11-20', // Revolución
+    '2025-12-25', // Navidad
+];
+
+$excluirFestivos = isset($_GET['excluirFestivos']);
+
 $fechaFin = date("Y-m-d");
 
 if (isset($_GET['mesInicio']) && isset($_GET['anioInicio']) && isset($_GET['mesFin']) && isset($_GET['anioFin'])) {
@@ -71,8 +84,12 @@ $fechaActual = date("Y-m-d");
 
 while ($row = $result->fetch_assoc()) {
     $fecha = $row['FechaValor'];
-    $claveMes = date('Y-m', strtotime($fecha));
 
+    if ($excluirFestivos && in_array($fecha, $diasFestivosHardcoded)) {
+        continue;
+    }
+
+    $claveMes = date('Y-m', strtotime($fecha));
     if (!isset($meses[$claveMes])) {
         $meses[$claveMes] = ['registros' => [], 'suma' => 0, 'n' => 0];
     }
