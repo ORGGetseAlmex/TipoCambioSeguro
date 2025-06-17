@@ -16,6 +16,19 @@ function fechaFormateadaEspañol($fechaISO) {
     return ucfirst($formatter->format($fecha));
 }
 
+function fechaMesLargoEspañol($ym) {
+    $fecha = DateTime::createFromFormat('Y-m', $ym);
+    $formatter = new IntlDateFormatter(
+        'es_MX',
+        IntlDateFormatter::LONG,
+        IntlDateFormatter::NONE,
+        'America/Mexico_City',
+        IntlDateFormatter::GREGORIAN,
+        "LLLL 'de' yyyy"
+    );
+    return ucfirst($formatter->format($fecha));
+}
+
 $fechaFin = date("Y-m-d");
 
 if (isset($_GET['mesInicio']) && isset($_GET['anioInicio']) && isset($_GET['mesFin']) && isset($_GET['anioFin'])) {
@@ -57,7 +70,7 @@ $fechaActual = date("Y-m-d");
 
 while ($row = $result->fetch_assoc()) {
     $fecha = $row['FechaValor'];
-    $claveMes = date('F Y', strtotime($fecha)); // en inglés, como 'June 2025'
+    $claveMes = date('Y-m', strtotime($fecha));
 
     if (!isset($meses[$claveMes])) {
         $meses[$claveMes] = ['registros' => [], 'suma' => 0, 'n' => 0];
@@ -70,14 +83,12 @@ while ($row = $result->fetch_assoc()) {
     $meses[$claveMes]['suma'] += $row['Valor'];
     $meses[$claveMes]['n']++;
 
-    // Buscar valor de hoy
     if ($fecha === $fechaActual && !$valorHoy) {
         $valorHoy = number_format($row['Valor'], 4);
         $fechaHoy = fechaFormateadaEspañol($fecha);
     }
 }
 
-// Fallback si no se encontró el de hoy
 if (!$valorHoy) {
     reset($meses);
     $primerMes = current($meses);
@@ -236,14 +247,13 @@ $conn->close();
     </form>
 </div>
 
-
 <div class="main">
     <div class="container">
         <h1>Tipo de Cambio del Dólar</h1>
         <h2>Fecha: <?= $fechaHoy ?> | Valor Actual: <span class="highlight">$<?= $valorHoy ?></span></h2>
 
-        <?php foreach ($meses as $mes => $info): ?>
-            <h3><?= $mes ?></h3>
+        <?php foreach ($meses as $ym => $info): ?>
+            <h3><?= fechaMesLargoEspañol($ym) ?></h3>
             <table>
                 <tr><th>Fecha</th><th>Valor</th></tr>
                 <?php foreach ($info['registros'] as $r): ?>
