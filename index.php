@@ -29,17 +29,24 @@ $result = $query->get_result();
 
 $meses = [];
 while ($row = $result->fetch_assoc()) {
-    $fecha = $row['FechaValor'];
-    $mesAnio = date('F Y', strtotime($fecha));
-    if (!isset($meses[$mesAnio])) {
-        $meses[$mesAnio] = ['registros' => [], 'suma' => 0, 'n' => 0];
+    $fechaOriginal = $row['FechaValor'];
+    
+    
+    $dt = new DateTime($fechaOriginal, new DateTimeZone('UTC'));
+    $dt->setTimezone(new DateTimeZone('America/Mexico_City'));
+    $fechaFormateada = $dt->format('d/m/Y');
+    $claveMes = $dt->format('F Y');
+
+    if (!isset($meses[$claveMes])) {
+        $meses[$claveMes] = ['registros' => [], 'suma' => 0, 'n' => 0];
     }
-    $meses[$mesAnio]['registros'][] = [
-        'fecha' => date('d/m/Y', strtotime($fecha)),
+
+    $meses[$claveMes]['registros'][] = [
+        'fecha' => $fechaFormateada,
         'valor' => number_format($row['Valor'], 4)
     ];
-    $meses[$mesAnio]['suma'] += $row['Valor'];
-    $meses[$mesAnio]['n']++;
+    $meses[$claveMes]['suma'] += $row['Valor'];
+    $meses[$claveMes]['n']++;
 }
 reset($meses);
 $ultimoMes = current($meses);
