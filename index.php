@@ -41,7 +41,6 @@ $res1 = $festivosQuery->get_result();
 while ($row = $res1->fetch_assoc()) {
     $diasFestivos[] = $row['fecha'];
 }
-
 // Cargar festivos recurrentes generados para cada año del rango
 $anioInicio = (int)date('Y', strtotime($desde));
 $anioFin = (int)date('Y', strtotime($hasta));
