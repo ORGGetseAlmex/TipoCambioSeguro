@@ -37,8 +37,8 @@ $diasFestivosHardcoded = [
 ];
 
 $excluirFestivos = isset($_GET['excluirFestivos']);
+$excluirInhabiles = isset($_GET['excluirInhabiles']);
 $fechaFin = date("Y-m-d");
-
 
 if (isset($_GET['mesInicio'], $_GET['anioInicio'], $_GET['mesFin'], $_GET['anioFin'])) {
     $desde = date("Y-m-d", strtotime($_GET['anioInicio'] . '-' . $_GET['mesInicio'] . '-01'));
@@ -56,12 +56,10 @@ if (isset($_GET['mesInicio'], $_GET['anioInicio'], $_GET['mesFin'], $_GET['anioF
     $hasta = $_GET['hasta'] ?? $fechaFin;
 }
 
-
 $query = $conn->prepare("SELECT Valor, FechaValor FROM tblTipoCambio WHERE Moneda = '02' AND FechaValor BETWEEN ? AND ? ORDER BY FechaValor DESC");
 $query->bind_param("ss", $desde, $hasta);
 $query->execute();
 $result = $query->get_result();
-
 
 $meses = [];
 $valorHoy = null;
@@ -71,7 +69,15 @@ $fechaActual = date("Y-m-d");
 while ($row = $result->fetch_assoc()) {
     $fecha = $row['FechaValor'];
 
-    if ($excluirFestivos && in_array($fecha, $diasFestivosHardcoded)) continue;
+    $esFestivo = in_array($fecha, $diasFestivosHardcoded);
+    $esFinDeSemana = in_array(date('N', strtotime($fecha)), [6, 7]); // 6 = sábado, 7 = domingo
+
+    if (
+        ($excluirFestivos && $esFestivo) ||
+        ($excluirInhabiles && ($esFestivo || $esFinDeSemana))
+    ) {
+        continue;
+    }
 
     $claveMes = date('Y-m', strtotime($fecha));
     if (!isset($meses[$claveMes])) {
@@ -79,19 +85,17 @@ while ($row = $result->fetch_assoc()) {
     }
 
     $meses[$claveMes]['registros'][] = [
-    'fecha_iso' => $fecha,
-    'valor' => $row['Valor'] 
-];
-$meses[$claveMes]['suma'] += $row['Valor'];
-$meses[$claveMes]['n']++;
-
+        'fecha_iso' => $fecha,
+        'valor' => $row['Valor']
+    ];
+    $meses[$claveMes]['suma'] += $row['Valor'];
+    $meses[$claveMes]['n']++;
 
     if ($fecha === $fechaActual && !$valorHoy) {
         $valorHoy = number_format($row['Valor'], 4);
         $fechaHoy = fechaFormateadaEspañol($fecha);
     }
 }
-
 
 if (!$valorHoy && !empty($meses)) {
     reset($meses);
@@ -228,6 +232,9 @@ $conn->close();
         <?php if ($excluirFestivos): ?>
             <input type="hidden" name="excluirFestivos" value="1">
         <?php endif; ?>
+        <?php if ($excluirInhabiles): ?>
+            <input type="hidden" name="excluirInhabiles" value="1">
+        <?php endif; ?>
         <button type="submit"><?= $texto ?></button>
     </form>
     <?php endforeach; ?>
@@ -247,13 +254,23 @@ $conn->close();
         <label>Año fin:
             <input type="number" name="anioFin" value="<?= date('Y') ?>">
         </label>
+        <?php if ($excluirFestivos): ?>
+            <input type="hidden" name="excluirFestivos" value="1">
+        <?php endif; ?>
+        <?php if ($excluirInhabiles): ?>
+            <input type="hidden" name="excluirInhabiles" value="1">
+        <?php endif; ?>
         <button type="submit" style="background-color:#00c853; color:white;">Buscar</button>
     </form>
 
-    
     <div class="custom-check">
         <input type="checkbox" id="festivoToggle" <?= $excluirFestivos ? 'checked' : '' ?>>
         <label for="festivoToggle">Excluir días festivos</label>
+    </div>
+
+    <div class="custom-check">
+        <input type="checkbox" id="inhabilToggle" <?= $excluirInhabiles ? 'checked' : '' ?>>
+        <label for="inhabilToggle">Excluir días no hábiles</label>
     </div>
 
     <script>
@@ -263,6 +280,16 @@ $conn->close();
                 url.searchParams.set('excluirFestivos', '1');
             } else {
                 url.searchParams.delete('excluirFestivos');
+            }
+            window.location.href = url.toString();
+        });
+
+        document.getElementById('inhabilToggle').addEventListener('change', function () {
+            const url = new URL(window.location.href);
+            if (this.checked) {
+                url.searchParams.set('excluirInhabiles', '1');
+            } else {
+                url.searchParams.delete('excluirInhabiles');
             }
             window.location.href = url.toString();
         });
