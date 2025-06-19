@@ -229,14 +229,6 @@ $conn->close();
     </style>
 </head>
 <body>
-    
-    <div class="sidebar">
-        <h2>Menú</h2>
-        <a href="festivos.php"><button>Volver</button></a>
-    </div>
-
-
-    
 <div class="logo-fijo"><img src="logo-almex.png" alt="Logo ALMEX"></div>
 
 <div class="sidebar">
