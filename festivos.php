@@ -1,18 +1,11 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 date_default_timezone_set('America/Mexico_City');
 define('APP_RUNNING', true);
 require 'db.php';
-
-// Verifica si la tabla ya existe y tiene la restricción UNIQUE en 'fecha'
 $verificaTabla = $conn->query("SHOW CREATE TABLE tblDiasFestivos");
 if ($verificaTabla) {
     $row = $verificaTabla->fetch_assoc();
     if (strpos($row['Create Table'], 'UNIQUE KEY `fecha` (`fecha`)') !== false) {
-        // Reconstruir tabla eliminando UNIQUE en 'fecha'
         $conn->query("RENAME TABLE tblDiasFestivos TO tblDiasFestivos_old");
 
         $conn->query("
@@ -23,17 +16,12 @@ if ($verificaTabla) {
                 recurrente BOOLEAN DEFAULT 0
             )
         ");
-
         $conn->query("
             INSERT INTO tblDiasFestivos (fecha, descripcion, recurrente)
             SELECT fecha, descripcion, recurrente FROM tblDiasFestivos_old
         ");
-
-        // Opcional: elimina la tabla antigua si ya se migró correctamente
-        // $conn->query("DROP TABLE tblDiasFestivos_old");
     }
 } else {
-    // Si la tabla no existe, la creamos por primera vez
     $conn->query("
         CREATE TABLE IF NOT EXISTS tblDiasFestivos (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -46,8 +34,6 @@ if ($verificaTabla) {
 
 $mensaje = "";
 $anioActual = date('Y');
-
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['accion'] === 'agregar') {
     $dia = str_pad($_POST['dia'], 2, '0', STR_PAD_LEFT);
     $mes = str_pad($_POST['mes'], 2, '0', STR_PAD_LEFT);
