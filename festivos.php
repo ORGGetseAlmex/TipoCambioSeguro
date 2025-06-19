@@ -1,12 +1,25 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 date_default_timezone_set('America/Mexico_City');
 define('APP_RUNNING', true);
 require 'db.php';
-require 'helpers.php';
+
+// Crear tabla si no existe
+$conn->query("
+    CREATE TABLE IF NOT EXISTS tblDiasFestivos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        fecha DATE NOT NULL UNIQUE,
+        descripcion VARCHAR(100),
+        recurrente BOOLEAN DEFAULT 0
+    )
+");
 
 $mensaje = "";
 
-// Alta de festivo
+// Alta
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['accion'] === 'agregar') {
     $dia = str_pad($_POST['dia'], 2, '0', STR_PAD_LEFT);
     $mes = str_pad($_POST['mes'], 2, '0', STR_PAD_LEFT);
@@ -65,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['accion'] === 'actualizar') 
     $mensaje = "Actualización completada.";
 }
 
-// Obtener todos los registros
+// Obtener registros
 $fechas = $conn->query("SELECT * FROM tblDiasFestivos ORDER BY fecha ASC")->fetch_all(MYSQLI_ASSOC);
 ?>
 
