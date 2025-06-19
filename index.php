@@ -31,10 +31,20 @@ function fechaMesLargoEspañol($ym) {
 }
 
 // Días festivos hardcodeados
-$diasFestivosHardcoded = [
-    '2025-01-01', '2025-02-05', '2025-03-21',
-    '2025-05-01', '2025-09-16', '2025-11-20', '2025-12-25',
-];
+//$diasFestivosHardcoded = [
+   // '2025-01-01', '2025-02-05', '2025-03-21',
+   // '2025-05-01', '2025-09-16', '2025-11-20', '2025-12-25',
+//];
+
+$diasFestivosHardcoded = [];
+
+$result = $conn->query("SELECT fecha FROM tblDiasFestivos ORDER BY fecha ASC");
+
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $diasFestivosHardcoded[] = $row['fecha'];
+    }
+}
 
 $excluirFestivos = isset($_GET['excluirFestivos']);
 $excluirInhabiles = isset($_GET['excluirInhabiles']);
