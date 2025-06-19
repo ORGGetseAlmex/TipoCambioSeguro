@@ -31,32 +31,10 @@ function fechaMesLargoEspañol($ym) {
 }
 
 // Días festivos hardcodeados
-$diasFestivos = [];
-
-// Cargar festivos normales
-$festivosQuery = $conn->prepare("SELECT fecha FROM tblDiasFestivos WHERE recurrente = 0 AND fecha BETWEEN ? AND ?");
-$festivosQuery->bind_param("ss", $desde, $hasta);
-$festivosQuery->execute();
-$res1 = $festivosQuery->get_result();
-while ($row = $res1->fetch_assoc()) {
-    $diasFestivos[] = $row['fecha'];
-}
-// Cargar festivos recurrentes generados para cada año del rango
-$anioInicio = (int)date('Y', strtotime($desde));
-$anioFin = (int)date('Y', strtotime($hasta));
-$recurrentes = $conn->query("SELECT fecha FROM tblDiasFestivos WHERE recurrente = 1");
-
-while ($row = $recurrentes->fetch_assoc()) {
-    $mesDia = date('m-d', strtotime($row['fecha']));
-    for ($y = $anioInicio; $y <= $anioFin; $y++) {
-        $fechaGenerada = "$y-$mesDia";
-        if ($fechaGenerada >= $desde && $fechaGenerada <= $hasta) {
-            $diasFestivos[] = $fechaGenerada;
-        }
-    }
-}
-
-
+$diasFestivosHardcoded = [
+    '2025-01-01', '2025-02-05', '2025-03-21',
+    '2025-05-01', '2025-09-16', '2025-11-20', '2025-12-25',
+];
 
 $excluirFestivos = isset($_GET['excluirFestivos']);
 $excluirInhabiles = isset($_GET['excluirInhabiles']);
@@ -91,7 +69,7 @@ $fechaActual = date("Y-m-d");
 while ($row = $result->fetch_assoc()) {
     $fecha = $row['FechaValor'];
 
-    $esFestivo = in_array($fecha, $diasFestivos);
+    $esFestivo = in_array($fecha, $diasFestivosHardcoded);
     $esFinDeSemana = in_array(date('N', strtotime($fecha)), [6, 7]); // 6 = sábado, 7 = domingo
 
     if (
