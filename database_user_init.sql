@@ -47,5 +47,13 @@ CREATE TABLE IF NOT EXISTS dias_festivos (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE tblDiasFestivos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    fecha DATE NOT NULL UNIQUE,
+    descripcion VARCHAR(100),
+    recurrente BOOLEAN DEFAULT 0
+);
+
+
 ALTER TABLE tblTipoCambio 
 ADD UNIQUE KEY uniq_fecha_moneda (FechaValor, Moneda);
