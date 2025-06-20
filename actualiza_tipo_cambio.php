@@ -13,6 +13,26 @@ if (!$token) {
 $fechaFin = date("Y-m-d");
 
 try {
+<<<<<<< HEAD
+    
+    $conn->query("CREATE TABLE IF NOT EXISTS tblTipoCambio (
+        Id INT AUTO_INCREMENT PRIMARY KEY,
+        Valor DECIMAL(10,4) NOT NULL,
+        FechaValor DATE NOT NULL,
+        FechaEmision DATE NOT NULL,
+        FechaLiquidacion DATE NOT NULL,
+        Moneda VARCHAR(3) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )");
+
+    $conn->query("CREATE TABLE IF NOT EXISTS tblTipoCambioStatus (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        ultima_actualizacion DATE
+    )");
+
+=======
+>>>>>>> dev
    
     $checkIndex = $conn->query("SHOW INDEX FROM tblTipoCambio WHERE Key_name = 'uniq_fecha_moneda'");
     if ($checkIndex->num_rows === 0) {
@@ -64,6 +84,21 @@ try {
         exit(0);
     }
 
+<<<<<<< HEAD
+    
+    $stmt = $conn->prepare("INSERT IGNORE INTO tblTipoCambio (Valor, FechaValor, FechaEmision, FechaLiquidacion, Moneda) VALUES (?, ?, ?, ?, '02')");
+
+    foreach ($registros as $item) {
+        $fecha = DateTime::createFromFormat('d/m/Y', $item['fecha'])->format('Y-m-d');
+        $valor = floatval($item['dato']);
+        $stmt->bind_param("dsss", $valor, $fecha, $fecha, $fecha);
+        $stmt->execute();
+    }
+
+    $stmt->close();
+
+   
+=======
 $conn->begin_transaction();
 
 $insertSQL = "INSERT IGNORE INTO tblTipoCambio (Valor, FechaValor, FechaEmision, FechaLiquidacion, Moneda) VALUES ";
@@ -101,6 +136,7 @@ $stmt->execute();
 $conn->commit();
 $stmt->close();
 
+>>>>>>> dev
     $hoy = date("Y-m-d");
     $conn->query("INSERT INTO tblTipoCambioStatus (ultima_actualizacion) VALUES ('$hoy')");
 
