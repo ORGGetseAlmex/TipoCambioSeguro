@@ -1,123 +1,3 @@
-<?php
-date_default_timezone_set('America/Mexico_City');
-define('APP_RUNNING', true);
-require 'db.php';
-require 'helpers.php';
-
-function fechaFormateadaEspañol($fechaISO) {
-    $fecha = new DateTime($fechaISO);
-    $formatter = new IntlDateFormatter(
-        'es_MX',
-        IntlDateFormatter::FULL,
-        IntlDateFormatter::NONE,
-        'America/Mexico_City',
-        IntlDateFormatter::GREGORIAN,
-        "EEEE d 'de' MMMM 'del' yyyy"
-    );
-    return ucfirst($formatter->format($fecha));
-}
-
-function fechaMesLargoEspañol($ym) {
-    $fecha = DateTime::createFromFormat('Y-m', $ym);
-    $formatter = new IntlDateFormatter(
-        'es_MX',
-        IntlDateFormatter::LONG,
-        IntlDateFormatter::NONE,
-        'America/Mexico_City',
-        IntlDateFormatter::GREGORIAN,
-        "LLLL 'de' yyyy"
-    );
-    return ucfirst($formatter->format($fecha));
-}
-
-// Días festivos hardcodeados
-//$diasFestivosHardcoded = [
-   // '2025-01-01', '2025-02-05', '2025-03-21',
-   // '2025-05-01', '2025-09-16', '2025-11-20', '2025-12-25',
-//];
-
-$diasFestivosHardcoded = [];
-
-$result = $conn->query("SELECT fecha FROM tblDiasFestivos ORDER BY fecha ASC");
-
-if ($result) {
-    while ($row = $result->fetch_assoc()) {
-        $diasFestivosHardcoded[] = $row['fecha'];
-    }
-}
-
-$excluirFestivos = isset($_GET['excluirFestivos']);
-$excluirInhabiles = isset($_GET['excluirInhabiles']);
-$fechaFin = date("Y-m-d");
-
-if (isset($_GET['mesInicio'], $_GET['anioInicio'], $_GET['mesFin'], $_GET['anioFin'])) {
-    $desde = date("Y-m-d", strtotime($_GET['anioInicio'] . '-' . $_GET['mesInicio'] . '-01'));
-    $hasta = date("Y-m-t", strtotime($_GET['anioFin'] . '-' . $_GET['mesFin'] . '-01'));
-} else {
-    $rango = $_GET['rango'] ?? '3meses';
-    switch ($rango) {
-        case 'semana': $desde = date("Y-m-d", strtotime("-7 days")); break;
-        case 'mes': $desde = date("Y-m-d", strtotime("-1 month")); break;
-        case '3meses': $desde = date("Y-m-d", strtotime("-3 months")); break;
-        case 'anio': $desde = date("Y-m-d", strtotime("-1 year")); break;
-        case 'todo': $desde = "1991-11-21"; break;
-        default: $desde = date("Y-m-d", strtotime("-3 months"));
-    }
-    $hasta = $_GET['hasta'] ?? $fechaFin;
-}
-
-$query = $conn->prepare("SELECT Valor, FechaValor FROM tblTipoCambio WHERE Moneda = '02' AND FechaValor BETWEEN ? AND ? ORDER BY FechaValor DESC");
-$query->bind_param("ss", $desde, $hasta);
-$query->execute();
-$result = $query->get_result();
-
-$meses = [];
-$valorHoy = null;
-$fechaHoy = null;
-$fechaActual = date("Y-m-d");
-
-while ($row = $result->fetch_assoc()) {
-    $fecha = $row['FechaValor'];
-
-    $esFestivo = in_array($fecha, $diasFestivosHardcoded);
-    $esFinDeSemana = in_array(date('N', strtotime($fecha)), [6, 7]); // 6 = sábado, 7 = domingo
-
-    if (
-        ($excluirFestivos && $esFestivo) ||
-        ($excluirInhabiles && ($esFestivo || $esFinDeSemana))
-    ) {
-        continue;
-    }
-
-    $claveMes = date('Y-m', strtotime($fecha));
-    if (!isset($meses[$claveMes])) {
-        $meses[$claveMes] = ['registros' => [], 'suma' => 0, 'n' => 0];
-    }
-
-    $meses[$claveMes]['registros'][] = [
-        'fecha_iso' => $fecha,
-        'valor' => $row['Valor']
-    ];
-    $meses[$claveMes]['suma'] += $row['Valor'];
-    $meses[$claveMes]['n']++;
-
-    if ($fecha === $fechaActual && !$valorHoy) {
-        $valorHoy = number_format($row['Valor'], 4);
-        $fechaHoy = fechaFormateadaEspañol($fecha);
-    }
-}
-
-if (!$valorHoy && !empty($meses)) {
-    reset($meses);
-    $primerMes = current($meses);
-    $primerRegistro = $primerMes['registros'][0];
-    $valorHoy = $primerRegistro['valor'];
-    $fechaHoy = fechaFormateadaEspañol($primerRegistro['fecha_iso']);
-}
-
-$conn->close();
-?>
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -229,7 +109,7 @@ $conn->close();
     </style>
 </head>
 <body>
-<div class="logo-fijo"><img src="logo-almex.png" alt="Logo ALMEX"></div>
+<div class="logo-fijo"><img src="/logo-almex.png" alt="Logo ALMEX"></div>
 
 <div class="sidebar">
     <h3>Rango</h3>
@@ -237,7 +117,7 @@ $conn->close();
     $rangoLinks = ['semana' => 'Semana', 'mes' => 'Mes', '3meses' => '3 Meses', 'anio' => 'Año', 'todo' => 'Todo'];
     foreach ($rangoLinks as $clave => $texto):
     ?>
-    <form method="get">
+    <form method="get" action="/">
         <input type="hidden" name="rango" value="<?= $clave ?>">
         <?php if ($excluirFestivos): ?>
             <input type="hidden" name="excluirFestivos" value="1">
@@ -250,7 +130,7 @@ $conn->close();
     <?php endforeach; ?>
 
     <h4>Buscar por Rango</h4>
-    <form method="get">
+    <form method="get" action="/">
         <?php $meses_es = [1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre']; ?>
         <label>Mes inicio:
             <select name="mesInicio"><?php for ($i = 1; $i <= 12; $i++): ?><option value="<?= $i ?>"><?= $meses_es[$i] ?></option><?php endfor; ?></select>
@@ -274,13 +154,13 @@ $conn->close();
     </form>
 
     <div class="custom-check">
-        <input type="checkbox" id="festivoToggle" <?= $excluirFestivos ? 'checked' : '' ?>>
+        <input type="checkbox" id="festivoToggle" <?= $excluirFestivos ? 'checked' : '' ?> />
         <label for="festivoToggle">Excluir días festivos</label>
     </div>
 
     <div class="custom-check">
-        <input type="checkbox" id="inhabilToggle" <?= $excluirInhabiles ? 'checked' : '' ?>>
-        <label for="inhabilToggle">Excluir días no hábiles</label>
+        <input type="checkbox" id="inhabilToggle" <?= $excluirInhabiles ? 'checked' : '' ?> />
+        <label for="inhabilToggle">Excluir días no hbiles</label>
     </div>
 
     <script>

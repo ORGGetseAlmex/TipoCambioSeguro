@@ -1,7 +1,8 @@
 <?php
 define('APP_RUNNING', true);
+require 'bootstrap.php';
 require 'db.php';
-require 'helpers.php';
+require 'app/helpers.php';
 
 date_default_timezone_set('America/Mexico_City');
 
@@ -13,28 +14,24 @@ if (!$token) {
 $fechaFin = date("Y-m-d");
 
 try {
-   
+
     $checkIndex = $conn->query("SHOW INDEX FROM tblTipoCambio WHERE Key_name = 'uniq_fecha_moneda'");
     if ($checkIndex->num_rows === 0) {
         $conn->query("ALTER TABLE tblTipoCambio ADD UNIQUE KEY uniq_fecha_moneda (FechaValor, Moneda)");
     }
 
-    
     $conn->query("DELETE t1 FROM tblTipoCambio t1 JOIN tblTipoCambio t2
         ON t1.FechaValor = t2.FechaValor AND t1.Moneda = t2.Moneda AND t1.Id > t2.Id");
 
-    
     $result = $conn->query("SELECT MAX(FechaValor) AS ultimaFecha FROM tblTipoCambio WHERE Moneda = '02'");
     $row = $result->fetch_assoc();
 
     $fechaInicio = $row['ultimaFecha'] ?? null;
 
     if (!$fechaInicio) {
-        
         $fechaInicio = "1991-11-21";
         echo "No se encontraron datos anteriores. Descargando todo desde 1991...\n";
     } else {
-        
         $fechaInicio = date("Y-m-d", strtotime($fechaInicio . " +1 day"));
         echo "Última fecha encontrada: {$row['ultimaFecha']}. Iniciando desde $fechaInicio hasta $fechaFin...\n";
     }
@@ -64,42 +61,42 @@ try {
         exit(0);
     }
 
-$conn->begin_transaction();
+    $conn->begin_transaction();
 
-$insertSQL = "INSERT IGNORE INTO tblTipoCambio (Valor, FechaValor, FechaEmision, FechaLiquidacion, Moneda) VALUES ";
-$placeholders = [];
-$params = [];
-$types = "";
+    $insertSQL = "INSERT IGNORE INTO tblTipoCambio (Valor, FechaValor, FechaEmision, FechaLiquidacion, Moneda) VALUES ";
+    $placeholders = [];
+    $params = [];
+    $types = "";
 
-foreach ($registros as $item) {
-    $fecha = DateTime::createFromFormat('d/m/Y', $item['fecha'])->format('Y-m-d');
-    $valor = floatval($item['dato']);
+    foreach ($registros as $item) {
+        $fecha = DateTime::createFromFormat('d/m/Y', $item['fecha'])->format('Y-m-d');
+        $valor = floatval($item['dato']);
 
-    $placeholders[] = "(?, ?, ?, ?, '02')";
-    $params[] = $valor;
-    $params[] = $fecha;
-    $params[] = $fecha;
-    $params[] = $fecha;
-    $types .= "dsss";
-}
+        $placeholders[] = "(?, ?, ?, ?, '02')";
+        $params[] = $valor;
+        $params[] = $fecha;
+        $params[] = $fecha;
+        $params[] = $fecha;
+        $types .= "dsss";
+    }
 
-$insertSQL .= implode(", ", $placeholders);
+    $insertSQL .= implode(", ", $placeholders);
 
-$stmt = $conn->prepare($insertSQL);
+    $stmt = $conn->prepare($insertSQL);
 
-if ($stmt === false) {
-    die("Error en prepare: " . $conn->error);
-}
+    if ($stmt === false) {
+        die("Error en prepare: " . $conn->error);
+    }
 
-$tmp = [];
-$tmp[] = &$types;
-foreach ($params as $key => $value) {
-    $tmp[] = &$params[$key];
-}
-call_user_func_array([$stmt, 'bind_param'], $tmp);
-$stmt->execute();
-$conn->commit();
-$stmt->close();
+    $tmp = [];
+    $tmp[] = &$types;
+    foreach ($params as $key => $value) {
+        $tmp[] = &$params[$key];
+    }
+    call_user_func_array([$stmt, 'bind_param'], $tmp);
+    $stmt->execute();
+    $conn->commit();
+    $stmt->close();
 
     $hoy = date("Y-m-d");
     $conn->query("INSERT INTO tblTipoCambioStatus (ultima_actualizacion) VALUES ('$hoy')");
